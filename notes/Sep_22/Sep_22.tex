@@ -1,0 +1,164 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{September 22, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Introduction}
+
+        In MAT 228 we will study standard model PDEs, namely:
+        \begin{enumerate}
+            \item The Avection Equation (the typical hyperbolic equation)
+            \begin{align}
+                u_t + c u_x = 0
+            \end{align}
+            \item The Diffusion (Heat) Equation (the typical parabolic equation)
+            \begin{align}
+                u_t = D u_{xx}
+            \end{align}
+            \item The Poisson Equation (the typical elliptic equation)
+            \begin{align}
+                u_{xx} = F
+            \end{align}
+        \end{enumerate}
+
+    \section{What we will not focus on in 228A}
+        \subsection{The Avection Equation}
+
+            Set $c \equiv 1$, and the domain $x > 0$.  Let the boundary condition be $u(0, t) = 1$ and the Initial condition
+            \begin{align}
+                u(x,0) = f(x) \coloneqq \begin{cases}
+                    1 & \text{if}\ 0 \leq x < \frac{1}{2} \\ 0 & \text{if}\ x \geq \frac{1}{2}
+                \end{cases}
+            \end{align}
+
+            Then for $t \geq 0$, the solution is
+            \begin{align*}
+                u(t,x) = \begin{cases}
+                    1 & \text{if}\ 0 \leq x < t + \frac{1}{2} \\
+                    0 & \text{else}
+                \end{cases}
+            \end{align*}
+            that is, the wave transports to the right.
+
+            \begin{center}
+                \begin{tikzpicture}
+                    \begin{axis}[legend pos=north east]
+                        \addplot[domain=0:0.5,blue] {1};
+                        \addplot[domain=0.5:5,blue] {0};
+                        \draw[blue] (axis cs:0.5,1) -- (axis cs:0.5,0);
+                        \legend{$t=0$}
+                    \end{axis}
+                \end{tikzpicture}
+                \hspace{1cm}
+                \begin{tikzpicture}
+                    \begin{axis}[legend pos=north east]
+                        \addplot[domain=0:2.7,blue] {1};
+                        \addplot[domain=2.7:5,blue] {0};
+                        \draw[->] (axis cs:2.4, .5) -- (axis cs:3, .5);
+                        \draw[blue] (axis cs:2.7,1) -- (axis cs:2.7,0);
+                        \legend{$t>0$}
+                    \end{axis}
+                \end{tikzpicture}
+            \end{center}
+
+        \subsection{The Heat Equation}
+
+            Set $D \equiv 1$, and the domain $0 \leq x \leq 1$.  Set the boundary conditions:
+            \begin{align}
+                u(0, t) = 1 \qquad u(1, t) = 0
+            \end{align}
+            and initial condition $f(x)$ defined above.
+            Then the discontinuity instantaneously smooths out so that $u(t,x) \in C^\infty$ for all $t > 0$, and the equilibrium state is stable and linear.
+            \begin{center}
+                \begin{tikzpicture}
+                    \begin{axis}[legend pos=north east]
+                        \addplot[domain=0:0.5, blue] {1};
+                        \addplot[domain=0.5:1, blue] {0};
+                        \draw[blue] (axis cs:0.5,1) -- (axis cs:0.5,0);
+                        \legend{$t=0$}
+                    \end{axis}
+                \end{tikzpicture}
+                \hspace{1cm}
+                \begin{tikzpicture}
+                    \begin{axis}[legend pos=north east]
+                        \addplot[domain=0:0.45, blue] {1};
+                        \addplot[domain=0.55:1, blue] {0};
+                        \addplot[domain=0.45:0.55, blue] {0.5*cos(deg((1/0.032)*(x-.45)))+0.5};
+                        \legend{$0 < t \ll 1$}
+                    \end{axis}
+                \end{tikzpicture}
+            \end{center}
+            \begin{center}
+                \begin{tikzpicture}
+                    \begin{axis}[legend pos=north east]
+                        \addplot[domain=0:1, blue] {0.5*cos(deg((1/0.32)*x))+0.5};
+                        \legend{$t > 0$}
+                    \end{axis}
+                \end{tikzpicture}
+                \hspace{1cm}
+                \begin{tikzpicture}
+                    \begin{axis}[legend pos=north east]
+                        \addplot[domain=0:1, blue] {1-x};
+                        \legend{$t\rightarrow\infty$}
+                    \end{axis}
+                \end{tikzpicture}
+            \end{center}
+
+    \section{What we will focus on in 228A}
+
+        We are focusing on the odd one out - it is time-independent.  Where do Poisson Equations show up?
+        \begin{itemize}
+            \item Steady State Diffusion Problems $(u_t = 0)$
+            \begin{itemize}
+                \item $u$ is a concentration
+                \item $u_t = \underbrace{D u_{xx}}_{\text{transport by diffusion}} + \underbrace{F}_{\text{input}}$
+                \item At steady state, $u_t = 0$, and so $-Du_{xx} = F$.
+                \item $u_t = D u_{xx} \underbrace{- ku}_{\text{loss due to environment$\dots$causes exponential decay}} + f$
+                \item At steady state, $-D u_{xx} + ku = f$, which is a Helmholtz Equation.
+            \end{itemize}
+            \item Electrostatics
+            \begin{itemize}
+                \item $\E$ is a steady electric field
+                \item $\rho$ is a charge distribution
+                \item $\E_0$ is a parameter
+                \item $\grad\cdot \E = \frac{\rho}{\E_0}$
+                \item Given the charge distribution, we want to find the electric field.
+                \item $\underbrace{\grad \times \E}_{\text{curl}} = 0\ \implies\ \exists$ potential function $\phi$ such that $\E = -\grad\phi$.
+                \item So, $\grad \cdot \E = \grad(-\grad\phi) = \underbrace{-\Delta \phi = \frac{\rho}{\E_0}}_{\text{Poisson Equation}}$
+            \end{itemize}
+            \item Potential Flow
+            \begin{itemize}
+                \item $\grad u = 0$, where $u$ is velocity.  $\grad u = 0$ means it is divergence-free, and thus incompressible.
+                \item With high Reynolds number it is curl-free, and thus there is a potential function $\phi$ such that $\Delta\phi = 0$, which is a Poisson equation.
+                \item With low Reynolds number (usually on very small length scales, i.e.~bacterial swimming), it is drag-dominated, effectively no inertia.
+                \item We have $\mu\Delta u - \grad p = 0$, so $\grad \cdot u = 0$, which implies it is imcompressible.  These are Stokes Equations.
+                \item Take Divergence, and assume commutativity with the Laplacian $\Delta$, and thus $-\Delta p = 0$, which is a Poisson Equation.
+            \end{itemize}
+        \end{itemize}
+
+        The Poisson equation is
+        \begin{align*}
+            u_{xx} &= f & \text{in one dimension} \\
+            u_{xx} + u_{yy} &= f & \text{in two dimensions in the Cartesian coordinates} \\
+            \Delta u &= f\ \ \text{or}\ \ (\grad \cdot \grad) u = f\ \ \text{or}\ \ \grad^2 u = f & \text{in any number of dimensions (finite)}
+        \end{align*}
+        These equations need a defined domain and boundary conditions.
+
+\end{document}
