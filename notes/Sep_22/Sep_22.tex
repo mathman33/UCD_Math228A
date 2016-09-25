@@ -25,28 +25,28 @@
         In MAT 228 we will study standard model PDEs, namely:
         \begin{enumerate}
             \item The Avection Equation (the typical hyperbolic equation)
-            \begin{align}
+            \begin{align*}
                 u_t + c u_x = 0
-            \end{align}
+            \end{align*}
             \item The Diffusion (Heat) Equation (the typical parabolic equation)
-            \begin{align}
+            \begin{align*}
                 u_t = D u_{xx}
-            \end{align}
+            \end{align*}
             \item The Poisson Equation (the typical elliptic equation)
-            \begin{align}
+            \begin{align*}
                 u_{xx} = F
-            \end{align}
+            \end{align*}
         \end{enumerate}
 
     \section{What we will not focus on in 228A}
         \subsection{The Avection Equation}
 
             Set $c \equiv 1$, and the domain $x > 0$.  Let the boundary condition be $u(0, t) = 1$ and the Initial condition
-            \begin{align}
+            \begin{align*}
                 u(x,0) = f(x) \coloneqq \begin{cases}
                     1 & \text{if}\ 0 \leq x < \frac{1}{2} \\ 0 & \text{if}\ x \geq \frac{1}{2}
                 \end{cases}
-            \end{align}
+            \end{align*}
 
             Then for $t \geq 0$, the solution is
             \begin{align*}
@@ -81,9 +81,9 @@
         \subsection{The Heat Equation}
 
             Set $D \equiv 1$, and the domain $0 \leq x \leq 1$.  Set the boundary conditions:
-            \begin{align}
+            \begin{align*}
                 u(0, t) = 1 \qquad u(1, t) = 0
-            \end{align}
+            \end{align*}
             and initial condition $f(x)$ defined above.
             Then the discontinuity instantaneously smooths out so that $u(t,x) \in C^\infty$ for all $t > 0$, and the equilibrium state is stable and linear.
             \begin{center}
@@ -160,5 +160,40 @@
             \Delta u &= f\ \ \text{or}\ \ (\grad \cdot \grad) u = f\ \ \text{or}\ \ \grad^2 u = f & \text{in any number of dimensions (finite)}
         \end{align*}
         These equations need a defined domain and boundary conditions.
+
+        \subsection{1-Dimensional Diffusion Equation}
+            Consider a long thin metal tube, which can be represented as a function in one dimension.  Let $u(x,t) \coloneqq $ the concentration of some chemical (or heat, or whatever) at time $t$ and position on the tube $x$, where $x \in [a,b]$.  Then
+            \begin{align*}
+                u_t = D u_{xx} + F
+            \end{align*}
+            What can the boundary conditions be?  The easiest condition is to hook one side up to a giant vat with constant concentration so that $u(0,t) = u_0$ is constant, which is called Dirichlet Boundary Condition.
+
+            The second type of condition is called a Neumann Boundary Condition, which is a condition on the flux at the boundary.  For example, we could cap one end so that no transport can happen through the boundary.  Given $(a,b)$, define
+            \begin{align*}
+                q(t) \coloneqq \int_a^b u(x,t)\dd x \qquad \text{(this is the total amount of chemical in the interval $(a,b)$ at time $t$)}
+            \end{align*}
+            So,
+            \begin{align*}
+                u_t &= D u_{xx} \\
+                \implies \int_a^b u_t \dd x &= \int_a^b D u_{xx} \dd x \\
+                \implies \frac{\dd}{\dd t} q(t) &= \underbrace{D\qty[u_x(b,t) - u_x(a,t)]}_{\text{these terms describe tre transport rate on the boundary}}
+            \end{align*}
+            Define $J \coloneqq -Du_x$ as the diffusive flux.  So if we want no flux (which is the only means of transport), we must have $u_x(0,t) = 0$.  Or, given some constant injection on an end point, we could set
+            \begin{align*}
+                -D u_x(0,t) = g, \qquad \text{where $g$ is constant.}
+            \end{align*}
+
+            The last type of condition can be likened to a semi-permeable membrane on the boundary.  It is called a Robin Boundary Condition, and is simply a linear combination of Dirichlet and Neumann conditions.  So,
+            \begin{align*}
+                J = \alpha(u_r - u_\ell)
+            \end{align*}
+            The flux balances so that
+            \begin{align*}
+                -D u_x(0,t) = \alpha(u(0,t) - u_0)
+            \end{align*}
+            and thus
+            \begin{align*}
+                \alpha u(0,t) + D u_x(0,t) = \alpha u_0.
+            \end{align*}
 
 \end{document}
