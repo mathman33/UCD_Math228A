@@ -86,23 +86,66 @@
                 \begin{center}
                     \begin{tikzpicture}
                         \begin{axis}[ymax=2,xmin=-0.5,xmax=4.5]
-                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:0,0.5) {};
-                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:0.4,0.5) {};
-                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:0.8,0.5) {};
-                            \addplot[blue,thick] coordinates {(1,0) (1.5,1) (2,0)};
-                            \node at (axis cs:1.7,1.3) [anchor=north east] {$\phi_{k-1}$};
-                            \addplot[blue,thick] coordinates {(1.5,0) (2,1) (2.5,0)};
-                            \node at (axis cs:2.2,1.3) [anchor=north east] {$\phi_{k}$};
-                            \addplot[blue,thick] coordinates {(2,0) (2.5,1) (3,0)};
-                            \node at (axis cs:2.9,1.3) [anchor=north east] {$\phi_{k+1}$};
-                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:3.2,0.5) {};
-                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:3.6,0.5) {};
-                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:4,0.5) {};
+                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:0,0.25) {};
+                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:0.4,0.25) {};
+                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:0.8,0.25) {};
+                            \addplot[blue,thick] coordinates {(1,0) (1.5,0.5) (2,0)};
+                            \node at (axis cs:1.7,0.75) [anchor=north east] {$\phi_{k-1}$};
+                            \addplot[blue,thick] coordinates {(1.5,0) (2,0.5) (2.5,0)};
+                            \node at (axis cs:2.25,0.75) [anchor=north east] {$\phi_{k}$};
+                            \addplot[blue,thick] coordinates {(2,0) (2.5,0.5) (3,0)};
+                            \node at (axis cs:3,0.75) [anchor=north east] {$\phi_{k+1}$};
+                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:3.2,0.25) {};
+                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:3.6,0.25) {};
+                            \node[blue,circle,fill,inner sep=1pt] at (axis cs:4,0.25) {};
                         \end{axis}
                     \end{tikzpicture}
                 \end{center}
-                It turns out $S_h$ is the space of ``connect-the-dot'' functions (piecewise linear functions).
+                It turns out $S_h$ is the space of ``connect-the-dot'' functions (piecewise linear functions).  Then we can approximate a function $u \in L^2$ by its closest representation using the basis $\{\phi_k\}_{k=1}^N$, i.e.
+                \begin{align}
+                    u(x) \approx u_h(x) \coloneqq \sum_{k=1}^N a_k \phi_k(x).
+                \end{align}
+                The projection theorem tells us there are unique $\{a_k\}$ such that $\norm{u - u_h}_{L^2}$ is minimized.
+                
+                Anyway, this looks a lot like finite differences, but is philosophically different: the function space is discretized, but not the domain.
 
-                Then we can approximate a function $u \in L^2$ by its closest representation using the basis $\{\phi_k\}$.
+                Finally, we can solve a minimization problem on $S_h$.  What does $F(u_h)$ look like?
+                \begin{align}
+                    F(u_h) = \frac{1}{2}\sum_{i,j=1}^N A_{i,j}a_i a_j + \sum_{i=1}^N b_i a_i
+                \end{align}
+                where
+                \begin{align}
+                    A_{i,j} = \int_\Omega \grad \phi_i \cdot \grad \phi_j \dd x \qquad \text{and} \qquad b_i = \int_\Omega f(x) \phi_i(x) \dd x
+                \end{align}
+                and $a_i$ are unknown.  To minimize this expression with respect to $\{a_1, \dots, a_N\}$, we take partial derivatives with respect to each $a_i$, i.e. $\grad[a_1, \dots, a_N]$, and set it equal to zero.  However,
+                \begin{align}
+                    \grad F = 0 \implies A \underline{a} = \underline{b},
+                \end{align}
+                which is a linear system.  It turns out that for very simple problems, this is identical to the linear system we acheive using finite differences.
+
+                Note that we chose a locally-supported since this gives rise to a sparse matrix $A$, which is easier to solve than arbitrary systems.
+
+            \subsection{Spectral Methods}
+                We can use a representation of $u$, i.e.
+                \begin{align}
+                    u_h(x) = \sum_{k=1}^N a_k \phi_k(x)
+                \end{align}
+                where $\phi_k$ are known functions (not limiting ourselves to locally-supported $\phi_k$), for example, take $\phi_k = \sin k\pi x$.  From here,
+                \begin{enumerate}[\ \ 1)]
+                    \item Solve the variational problem (but $A$ is not sparse - compuationally expensive)
+                    \item For a set of points $\left\{x_1,\dots, x_N\right\}$ in the domain $\Omega$, solve $\laplacian u x_i = f(x_i)$.  That is, actually solve the PDE on the grid points (spectral collocation, which is a generalization of the finite differences method).
+                \end{enumerate}
+                Thus, again, we have
+                \begin{align}
+                    \sum_{i,j=1}^N a_j \phi_j(x_i) \qquad \text{for i,j = 1, 2, \dots N.}
+                \end{align}
+                And once again we get a linear system:
+                \begin{align}
+                    A_{ij} = \phi_j^{''}(x_i),
+                \end{align}
+                The main problems of this method are
+                \begin{itemize}
+                    \item In general, the matrix $A$ is dense, not sparse
+                \end{itemize}
 
 \end{document}
