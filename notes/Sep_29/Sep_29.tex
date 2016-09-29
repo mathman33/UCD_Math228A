@@ -1,0 +1,166 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{September 29, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Finite Difference Methods}
+        Big idea is to approximate derivatives using function values at discrete points, i.e.~approximating derivatives using differences.
+
+        \subsection{How to approximate a derivative with a difference}
+            Define the forward difference operator $D_+$ by
+            \begin{align*}
+                D_+(u(x)) \coloneqq \frac{u(x + h) - u(x)}{h}
+            \end{align*}
+            where $h$ is fixed.  We can also define the backward difference operator $D_-$ by
+            \begin{align*}
+                D_-(u(x)) \coloneqq \frac{u(x) - u(x - h)}{h}.
+            \end{align*}
+            How accurately do these approximate $\dfrac{\dd}{\dd x}$?  Define $\E$ as the error of the apprimation, i.e.
+            \begin{align*}
+                \E \coloneqq D_+(u(x)) - u'(x)
+            \end{align*}
+            Use a Taylor expansion as $h \rightarrow 0$:
+            \begin{align*}
+                u(x+h) = u(x) + h u'(x) + \frac{h^2}{2}u''(x) + \frac{h^3}{6}u'''(x) + \dots \\
+                D_+(u(x)) = u'(x) + \frac{h}{2}u''(x) + \frac{h^2}{6}u'''(x) + \dots
+            \end{align*}
+            so
+            \begin{align*}
+                \E = \frac{h}{2}u''(x) + \frac{h^2}{6}u'''(x)
+            \end{align*}
+            Assuming $h \ll 1$ and $u''$ is bounded, then we can say $\E = \order{h}$.  The same idea holds for $D_-$.
+            \begin{align*}
+                u(x - h) = u(x) - hu'(x) + \frac{h^2}{2}u''(X) - \dots
+            \end{align*}
+            So,
+            \begin{align*}
+                D_-(u(x)) = u'(x) - \underbrace{\frac{h}{2}u''(x) + \frac{h^2}{6}u'''(x) + \dots}_{=\E}
+            \end{align*}
+            and thus $\E = \order{h}$.
+
+            Now define the ``centered difference operator'' $D_0$ by
+            \begin{align*}
+                D_0(u(x)) \coloneqq \frac{1}{2}(D_+ + D_-)u(x) = \frac{u(x + h) - u(x - h)}{2h} \\
+                = u'(x) + \frac{h^2}{6}u'''(x) + \dots \qquad \text{by Taylor expansion}
+            \end{align*}
+            So $\E = \order{h^2}$ when $\E$ is the error term for $D_0$.
+
+            Terminology:
+            \begin{itemize}
+                \item $D_+$ and $D_-$ provide first order accurate approximations to the derivative
+                \item $D_0$ provides second order accurate appoximations to the derivative
+            \end{itemize}
+
+            In practice, halving $h$ should result in halving of the absolute error of first-order approximations and quartering the absolute error of second-order approximations (passed-out sheet).  In this problem,
+            \begin{align*}
+                \text{Absolute Error} = D_+(u(2)) - u'(2) \\[.1cm]
+                \text{Relative Error} = \frac{D_+(u(2)) - u'(2)}{u'(2)} \qquad \text{how many digits of accuracy do we expect}
+            \end{align*}
+
+        \subsection{In General...}
+            For a fixed $h$, $D_+(u(x))$ can be evaluated everywhere.  For finite difference methods, we start on a discrete domain.  For example, an infinite equally-spaced lattice on the real line, points separated by a distance of $h$.  The points are labeled $x_j$ where $x_j \coloneqq jh$ for $j \in \mathbb{Z}$.
+
+            So $u_j \approx u(x_j)$ and we define $(D_+u)_j$ by
+            \begin{align*}
+                \qty(D_+u)_j \coloneqq \frac{u_{j+1} - u_j}{h}
+            \end{align*}
+
+        \subsection{Approximating Higher Derivatives}
+            We can apply the difference operators multiple times.  For second derivatives.  We could use
+            \begin{align*}
+                D_+^2 \qquad D_-^2 \qquad D_0^2 \qquad D_+D_- \qquad D_0D_+ \qquad \dots
+            \end{align*}
+            All of these are approximations to the second derivative.  Two good ones are $D_0^2$ and $D_+D_-$ (or $D_-D_+$).
+            \begin{align*}
+                (D_0u)_j &= \frac{u_{j+1} - u_{j-1}}{2h} \\
+                \implies (D_0^2u)_j &= \frac{u_{j+2} - 2u_h + u_{j-2}}{4h^2} \\
+            \end{align*}
+            and
+            \begin{align*}
+                (D_-u)_j &= \frac{u_j - u_{j-1}}{h} \\
+                \implies (D_+D_-u)_j &= \frac{u_{j+1} - 2u_j + u_{j-1}}{h^2}
+            \end{align*}
+            So we see $D_0^2$ is the exact same operator as $D_+D_-$ but with a coarser mesh.
+
+            Another way we derive an approximation to the second derivative is by seeing that for second derivatives, we must use at least three points.  So at $x_j$ we should also use $x_{j-1}$ and $x_{j+1}$ since they are the closest to $x_j$.  What linear combination should we use?
+            \begin{align}
+                (D^2u)_j = au_{j-1} + bu_j + cu_{j+1}
+            \end{align}
+            where $a$, $b$, and $c$ are constants to be determined.  Assume this should be equivalent to
+            \begin{align}
+                (D^2u)_j &= au_{j-1} + bu_j + cu_{j+1} = a u(x-h) + b u(x) + c u(x - h) \\
+                &= a\qty(u(x) - h u'(x) + \frac{h^2}{2}u''(x) - \frac{h^3}{6}u'''(x)+\frac{h^4}{24}u^{(4)}(x) + \dots) + b u(x) \\
+                &\qquad + c\qty(u(x) + h u'(x) + \frac{h^2}{2}u''(x) + \frac{h^3}{6}u'''(x)+\frac{h^4}{24}u^{(4)}(x) + \dots) \\
+                &= (a + b + c)u(x) + (c - a)hu'(x) + (a + c)\frac{h^2}{2}u''(x) + \dots
+            \end{align}
+            We require
+            \begin{align}
+                a + b + c &= 0 \\
+                -ha + hc &= 0 \\
+                \frac{h^2}{2}a + \frac{h^2}{2}c &= 1
+            \end{align}
+            The solution is
+            \begin{align}
+                a = c = \frac{1}{h^2} \qquad \text{and} \qquad b = \frac{-2}{h^2}
+            \end{align}
+            which coincides with $D_+D_-$.  Next we need to show the higher order terms are small...
+            \begin{align}
+                (D_+D_-u)_j &= u''(x_j) + \cancelto{0}{\frac{h^3}{6}{(c - a)}u'''(x)} + \frac{h^4}{24}(a + c)u^{(4)}(x) + \dots \\
+                &= u''(x_j) + \frac{h^2}{12}u^{(4)}(x) + \dots
+            \end{align}
+            and so this is a second-order approximation.
+
+            If we pick $x_{j+1}$ and $x_{j+2}$ we lose symmetry, so we will lose the free second-order approximation.  $D_+D_+$ is first-order accurate.  Similarly, if we have unequal grid spacing, we lose the symmetry of $D_+D_-$.  We would expect three-point operators to give first-order accuracy in general.
+
+        \subsection{Derivation of approximation of $n^{\text{th}}$ derivative of $p^\text{th}$ order accuracy}
+            How many points do we need assuming no symmetry?  Say we have $m$ points.
+            \begin{align}
+                w_1u_1 + w_2u_2 + \dots + w_mu_m
+            \end{align}
+            Taylor series..
+            \begin{align}
+                A_0u(x) + A_1u'(x) + \dots + A_{n-1}u^{(n-1)}(x) + A_nu^{(n)}(x) + A_{n+1}u^{(n+1)}(x) + \dots
+            \end{align}
+            So we want $A_0 = A_1 = \dots = A_{n-1} = 0$ and $A+n = 1$.  This means we have $n+1$ constraints, so generically we need $n+1$ points.  To get the accuracy, we expect $w \sim \dfrac{1}{h^n}$, i.e. $A_{n+1}u^{(n+1)}(x)$ has size $h$.  So we need
+            \begin{align}
+                m = \underbrace{(n + 1)}_\text{for $n^{\text{th}}$ derivative} + \underbrace{(p - 1)}_{\text{for $p^\text{th}$ order accuracy}}
+            \end{align}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
