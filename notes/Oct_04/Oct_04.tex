@@ -30,17 +30,17 @@
         Notation: use $u_j \colonapprox u(x_j)$.
 
         Next we replace the Laplacian $\frac{\partial^2}{\partial x^2}$ with a difference operator $D$.
-        \begin{align}
+        \begin{align*}
             \frac{u_{j-1} - 2u_{j} + u_{j+1}}{h^2} = f_j \coloneqq f(x_j)
-        \end{align}
+        \end{align*}
         This is a linear algebra problem with $N$ unknowns.  Collect them into a vector $\underline{u}$:
-        \begin{align}
+        \begin{align*}
             \underline{u} = \qty(\begin{array}{c}
                 u_1 \\ \vdots \\ u_N
             \end{array})
-        \end{align}
+        \end{align*}
         The above equations are of the form $A\underline{u} = \underline{b}$.  What are $A$ and $\underline{b}$?
-        \begin{align}
+        \begin{align*}
             \frac{1}{h^2}\qty(\begin{array}{ccccccc}
                 -2 & 1 & 0 & 0 & \dots & 0 & 0 \\
                 1 & -2 & 1 & 0 & \dots & 0 & 0 \\
@@ -54,21 +54,21 @@
             \end{array}) = \qty(\begin{array}{c}
                 f_1 - \frac{\alpha}{h^2} \\ f_2 \\ \vdots \\ f_{N-1} \\ f_N - \frac{\beta}{h^2}
             \end{array})
-        \end{align}
+        \end{align*}
         So $A$ is the above tri-diagonal matrix and $\underline{b}$ is
-        \begin{align}
+        \begin{align*}
             \underline{b} = \qty(\begin{array}{c}
                 f_1 - \frac{\alpha}{h^2} \\ f_2 \\ \vdots \\ f_{N-1} \\ f_N - \frac{\beta}{h^2}
             \end{array}).
-        \end{align}
+        \end{align*}
         What if
-        \begin{align}
+        \begin{align*}
             \underline{u} = \qty(\begin{array}{c}
                 u_0 \\ u_1 \\ \vdots \\ u_N \\ u_{N+1}
             \end{array})?
-        \end{align}
+        \end{align*}
         Then
-        \begin{align}
+        \begin{align*}
             A = \frac{1}{h^2}\qty(\begin{array}{ccccccccc}
                 h^2 & 0 & 0 & 0 & 0 & \dots & 0 & 0 \\
                 1 & -2 & 1 & 0 & 0 & \dots & 0 & 0 \\
@@ -81,90 +81,90 @@
             \end{array}), \qquad \underline{b} = \qty(\begin{array}{c}
                 \alpha \\ f_1 \\ f_2 \\ \vdots \\ f_{N-1} \\ f_N \\ \beta
             \end{array})
-        \end{align}
+        \end{align*}
         \subsection{Errors}
             Anyway, how close is $u_j$ to $u(x_j)$ (which is the solution to the PDE)?  The error at a point is
-            \begin{align}
+            \begin{align*}
                 e_j^h = u_j^h - u(x_j)
-            \end{align}
+            \end{align*}
             which can be put into a vector
-            \begin{align}
+            \begin{align*}
                 \underline{e}^h = \underline{u}^h - \underline{u}_\text{sol}
-            \end{align}
+            \end{align*}
             where
-            \begin{align}
+            \begin{align*}
                 (\underline{u}_\text{sol})_j = u(x_j).
-            \end{align}
+            \end{align*}
             We would like
-            \begin{align}
+            \begin{align*}
                 \norm{\underline{e}^h} \rightarrow 0 \qquad \text{as} \qquad h \rightarrow 0
-            \end{align}
+            \end{align*}
             where $\norm{\cdot}$ is the appropriate norm.  If the error goes to $0$ as the mesh spacing $h$ goes to zero, the method (numerical scheme) is called a ``convergent scheme''.  What norm should we use to measure the errors?
         \subsection{Vector, Matrix, and Function norms}
             Let $\underline{x} \in \Rl^n$.  Then
-            \begin{align}
+            \begin{align*}
                 \norm{\underline{x}}_2^2 = \sum_{j=1}^n x_j^2 \qquad \qquad \norm{\underline{x}}_1 = \sum_{j=1}^n \abs{x_j} \qquad \qquad \norm{\underline{x}}_\infty = \max_{j=1,\dots,n}\abs{x_j}
-            \end{align}
+            \end{align*}
             Let $\f{u}{(a,b)}{\Rl}$.  Then
-            \begin{align}
+            \begin{align*}
                 \norm{u}_2^2 = \int_a^b \abs{u(x)}^2\dd x \qquad \qquad \norm{u}_1 = \int_a^b \abs{u(x)}\dd x \qquad \qquad \norm{u}_\infty = \esssup_{x\in(a,b)}\abs{u(x)}
-            \end{align}
+            \end{align*}
             Example: $u(x) = 1$ on $(0,1)$
-            \begin{align}
+            \begin{align*}
                 \norm{u}_2 = \norm{u}_1 = \norm{u}_\infty = 1
-            \end{align}
+            \end{align*}
             But if we sample on the mesh, where $(\underline{u})_j = u(x_j)$ is a vector of $1$'s, we have
-            \begin{align}
+            \begin{align*}
                 \norm{\underline{u}}_2 = \sqrt{N} \qquad \qquad \norm{\underline{u}}_1 = N \qquad \qquad \norm{\underline{u}}_\infty = 1
-            \end{align}
+            \end{align*}
             So we should discretize the function norms, rather than using vector norms on finite-dimensional spaces.  How?
             \subsubsection{Discretized Function norms}
                 $\underline{e}_h$ is a grid function.  Define
-                \begin{align}
+                \begin{align*}
                     \norm{\underline{e}_h}_2^2 = h\sum_{j=1}^N e_j^2
-                \end{align}
+                \end{align*}
                 Similarly,
-                \begin{align}
+                \begin{align*}
                     \norm{\underline{e}_h}_1 = h \sum_{j=1}^N\abs{e_j}
-                \end{align}
+                \end{align*}
                 The norm is mesh-dependent.  The tricky thing here is the notation of the norm.  $\norm{\cdot}_2$ denotes the specific norm on the specific mesh space created.
             \subsubsection{Induced Matrix Norms}
                 Let $A$ be some matrix, $\f{A}{\Rl^n}{\Rl^n}$ a linear operator on $\Rl^n$.  Then the definition of the operator norm is
-                \begin{align}
+                \begin{align*}
                     \norm{A} \coloneqq \sup_{\norm{x} = 1} \norm{Ax}
-                \end{align}
+                \end{align*}
                 Supposing $\Rl^n$ is equipped with $\norm{\cdot}_\infty$, then define
-                \begin{align}
+                \begin{align*}
                     \norm{A}_\infty = \max_i \underbrace{\sum_{j=1}^n \abs{a_{ij}}}_{\text{sum over the $i$\textsuperscript{th} row}} \qquad \text{(max row sum)} \\
-                \end{align}
+                \end{align*}
                 If $\Rl^n$ is equipped with $\norm{\cdot}_1$, then
-                \begin{align}
+                \begin{align*}
                     \norm{A}_1 = \max_j \underbrace{\sum_{i=1}^n \abs{a_{ij}}}_{\text{sum over the $j$\textsuperscript{th} column}} \qquad \text{(max column sum)} \\
-                \end{align}
+                \end{align*}
                 If $\Rl^n$ is equipped with $\norm{\cdot}_2$, then
-                \begin{align}
+                \begin{align*}
                     \norm{A}_2 = \sqrt{\rho(A^*A)} \qquad \text{(largest singular value)}
-                \end{align}
+                \end{align*}
                 where $\rho$ denotes the spectal radius and $A^*$ is the conjugate transpose of $A$.  The spectral radius is defined as the modulus of the largest eigenvalue.
 
                 These are proved in Hunter-Nachtergaele.  For example, to prove $\norm{A}_\infty$ is the maximum row sum, first we prove boundedness of $\norm{\cdot}_\infty$.
-                \begin{align}
+                \begin{align*}
                     \norm{A}_\infty = \max_{\norm{x}_\infty = 1} \norm{Ax}_\infty = \max_{\norm{x} = 1}\max_i\abs{\sum_{j=1}^n a_{ij}x_j} \leq \max_{\norm{x}=1}\max_i\sum_{j=1}^n\abs{a_{ij}}\abs{x_j} \leq \max_i\sum_{j=1}^n\abs{a_{ij}}
-                \end{align}
+                \end{align*}
                 Then we acheive $\norm{\cdot}_\infty$. Let $I$ be the index of the row where $\norm{A}_\infty$ is maximized.  Then
-                \begin{align}
+                \begin{align*}
                     \norm{A}_\infty = \sum_{j=1}^n\abs{a_{Ij}}
-                \end{align}
+                \end{align*}
                 So picking $(x)_j = \sgn(a_{Ij})$ yields equality.
 
                 In general, for any induced matrix norm,
-                \begin{align}
+                \begin{align*}
                     \frac{\norm{Ax}}{\norm{x}} \leq \max_{x \neq 0}\frac{\norm{Ax}}{\norm{x}} \eqqcolon \norm{A}
-                \end{align}
+                \end{align*}
                 So by the definition of the matrix norm, we have the inequality
-                \begin{align}
+                \begin{align*}
                     \norm{Ax} \leq \norm{A}\norm{x}.
-                \end{align}
+                \end{align*}
 
 \end{document}
 
