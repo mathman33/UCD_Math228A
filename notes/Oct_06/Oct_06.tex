@@ -1,0 +1,146 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{October 6, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{1-Dimensional Poisson Equation}
+        \subsection{Recall}
+            \begin{align}
+                u_{xx} = f \qquad u(0) = \alpha \qquad u(1) = \beta
+            \end{align}
+            Uniform spacing between (and including) $0$ and $1$ with $N+2$ points and $h = \frac{1}{N+1}$.  This yielded the finite-difference approximation
+            \begin{align}
+                A\underline{u}^h = \underline{b}
+            \end{align}
+            How big is the error?
+            \begin{align}
+                \underline{e}^h = \underline{u}^h - \underline{u}_\text{sol}, \qquad \text{where} \qquad \qty(u_\text{sol})_j = u(x_j)
+            \end{align}
+            We hope that $\norm{\underline{e}^h} = \order{h^2}$.  So the general question is ``How do errors in our operators relate to errors in the discrete solution?''
+        \subsection{How is the size of this error related to discretization error?}
+            In general, $\underline{u}_\text{sol}$ is not a solution to $A\underline{u}^h = \underline{b}$.  We define the local trunctation error $\underline{\tau}^h$
+            \begin{align}
+                \underline{\tau}^h = A\underline{u}_\text{sol} - \underline{b}
+            \end{align}
+            So for $j = 2, \dots, N-1$,
+            \begin{align}
+                \tau_j^h &= \frac{1}{h^2}\qty[u(x_{j-1}) - 2u(x_j) + u(x_{j+1})] - f(x_j) \\
+                &= \frac{1}{h^2}\qty[u(x_j - h) - 2u(x_j) + u(x_j+h)] - f(x_j) \\
+                &= \underline{u_xx(x_j)} + \frac{h^2}{12}u^{(4)}(x_j) + \text{higher order terms} - \underline{f(x_j)} \qquad \qquad \text{(using Taylor expansions)}
+            \end{align}
+            The underlined terms balance, so
+            \begin{align}
+                \tau_j^h = \frac{h^2}{12}u^{(4)}(x_j) + \order{h^4}
+            \end{align}
+            Now write
+            \begin{align}
+                A\underline{u}_\text{sol} &= \underline{b} + \underline{\tau}^h \\
+                A\underline{u}_h = \underline{b}
+            \end{align}
+            Subtracting these equations, and usin the fact that $\underline{e}^h = \underline{u}^h - \underline{u}_\text{sol}$, gives
+            \begin{align}
+                A(\underline{u}^h - \underline{u}_\text{sol}) &= -\underline{\tau}^h \\
+                A\underline{e}^h &= -\underline{\tau}^h \\
+                \underline{e}^h &= -A^{-1}\underline{\tau}^h
+            \end{align}
+        \subsection{Consistency vs. Convergence}
+            A numerical scheme is ``consistent'' if the trunctation error goes to $0$, i.e.~if $\underline{\tau}^h \rightarrow 0$ as $h \rightarrow 0$.  A numerical scheme is ``convergence'' if $\underline{e}^h \rightarrow 0$ as $h \rightarrow 0$.  {\color{blue}A scheme can be consistent and not convergent if $\norm{A^{-1}} = \infty$.}
+
+            For linear schemes applied to linear PDEs we have the Lax-Equivalence Theorem:
+            \begin{itemize}
+                \item If a scheme is consistent and stable, then it is convergent.
+            \end{itemize}
+        \subsection{Stability}
+            ``Stable'' in our case means that
+            \begin{align}
+                \norm{(A^h)^{-1}} \leq C \qquad \text{for all } h \leq h_0 \text{ where $C$ is independent of $h$}
+            \end{align}
+            \begin{align}
+                \norm{\underline{e}^h} = \norm{A^{-1}\underline{\tau}^h} \leq \norm{A^{-1}}\norm{\underline{\tau}^h} \leq C\norm{\underline{\tau}^h}b
+            \end{align}
+            \subsubsection{Stability in the 2-norm}
+                Remember $A$ is symmetric, and that $\norm{A}_2 = \rho(A) = \max\abs{\lambda_i}$.  $\sqrt{\rho\qty(AA^*)} = \sqrt{\rho\qty(A^2)} = \rho\qty(\sqrt{A^2}) = \rho(A)$.  Then
+                \begin{align}
+                    \norm{A^{-1}}_2 = \rho\qty(A^{-1}) = \max\abs{\frac{1}{\lambda_j}} = \frac{1}{\min\abs{\lambda_j}}
+                \end{align}
+            \subsubsection{Explicitly Calculating the Eigenvalues of $A$}
+                Recall $u^k(x) = \sin(k\pi x)$ is an eigenfunction of $\frac{\dd^2}{\dd x^2}$ on functions zero at $0$ and $1$.  It turns out the eigenvectors of $A$ are these eigenfunctions evaluated on the grid points.  So we claim
+                \begin{align}
+                    u_j^k = \sin(k\pi x_i), \qquad 1, \dots, N
+                \end{align}
+                are eigenvectors of $A$.  Let's explicitly show this.
+                \begin{align}
+                    \frac{1}{h^2}\qty[\sin(k\pi x_{j-1}) - 2\sin(k\pi x_j) + \sin(k \pi x_{j+1})] &= \frac{1}{h^2}\qty[\sin(k\pi(x_j - h)) - 2\sin(k\pi x_j) + \sin(k\pi x_j+h)] \\
+                    &= \frac{1}{h^2}\qty[\sin(k\pi x_j)\cos(k\pi h) - \sin(k\pi h) \cos(k\pi x_j)] \\
+                    &\qquad - \frac{1}{h^2}\qty[-2\sin(k\pi x_j)] \\
+                    &\qquad + \frac{1}{h}^2\qty[\sin(k\pi x_j)\cos(k\pi h) + \sin(k\pi h)\cos(k\pi x_j)] \\
+                    &= \frac{1}{h^s}\qty(2\cos(k\pi h) - 2)\sin(k\pi x_j)
+                \end{align}
+                Thus we have eigenvalues
+                \begin{align}
+                    \lambda_k &= \frac{2}{h^2}\qty(\cos(k\pi h) - 1), \qquad k = 1, \dots, N \\
+                    &= -\frac{4}{h^2}\sin^2\qty(\frac{k\pi h}{2})
+                \end{align}
+                As $k$ goes from $1$ to $N$, $k\pi h$ goees from $\pi h$ to $N\pi h = \frac{N\pi}{N+1}$.  So, the smallest magnitude eigenvalue is
+                \begin{align}
+                    \lambda_1 &= \frac{2}{h^2}\qty(\cos(\pi h) - 1) \\
+                    &= \frac{2}{h^2}\qty(1 - \frac{1}{2}\pi^2 h^2 + \order{h^4} - 1) \\
+                    &= -\pi^2 + \order{h^2}
+                \end{align}
+                The following is in red since I was falling asleep and cannot vouch for accuracy...
+                
+                {\color{red}So we have control of this inverse since
+                                \begin{align}
+                                    \norm{A^{-1}}_2 = \frac{1}{\pi^2} + \order{h^2}
+                                \end{align}
+                                and thus
+                                \begin{align}
+                                    \underline{e}^h &= -\norm{A^{-1}}_2\norm{\underline{\tau}^h}_2 \\
+                                    &= \qty(\frac{1}{\pi^2} + \order{h^2})(\order{h@2})
+                                \end{align}
+                        \subsection{Eigenvalues of the Continuous space operator are}
+                            \begin{align}
+                                \lambda_k^c = -k^2\pi^2
+                            \end{align}}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
