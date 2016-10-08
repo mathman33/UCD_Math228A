@@ -1,0 +1,4 @@
+\select@language {english}
+\contentsline {section}{\bf Problem 1}{2}{section*.1}
+\contentsline {section}{\bf Problem 2}{4}{section*.2}
+\contentsline {section}{\bf Problem 3}{5}{section*.3}
