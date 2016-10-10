@@ -296,7 +296,7 @@ Finite element methods are based on these ``weak formulations'' of the problem. 
 
 \problem{Problem 3}{\begin{enumerate}[\ \ (a)]
     \item Using a Taylor expansion, derive the finite difference formula to approximate the second derivative at $x$ using function values at $x - \frac{h}{2}$, $x$, and $x + h$.  How accurate is the finite difference approximation?
-    \item Perform a refinement study to verify the accuract of the difference formula you derived.
+    \item Perform a refinement study to verify the accuracy of the difference formula you derived.
     \item Derive an expression for the quadratic polynomial that interpolates the data $\qty(x - \frac{h}{2}, u\qty(x - \frac{h}{2}))$, $(x, u(x))$, and $(x + h, u(x + h))$.  How is the finite difference formula you derived in problem 3a related to the interpolating polynomial?
 \end{enumerate}}
 
@@ -315,8 +315,9 @@ Finite element methods are based on these ``weak formulations'' of the problem. 
         \begin{align}
             (D^2 u)_j = \frac{8}{3h^2}u\qty(x - \frac{h}{2}) - \frac{4}{h^2}u(x) + \frac{4}{3h^2}u(x + h)
         \end{align}
-        {\color{red} not done...}
+        Note that $\dfrac{c}{6} - \frac{a}{48} = \frac{1}{6h^2}$ and thus the $u'''(x)$ term is order $h$.  This means $D^2$ has $\order{h}$ accuracy.
     \item
+        {\color{red}CODE}
     \item
         The polynomial through the points
         \begin{align}
@@ -330,10 +331,17 @@ Finite element methods are based on these ``weak formulations'' of the problem. 
         \end{align}
         This is a simple linear algebra problem that can be solved symbolically using a symbolic solver like Maple or Python.  We get:
         \begin{align}
-            A &= \frac{1}{3 h^{2}} \left(3 h^{2} u(x) - 3 h u(x) x - h u(x + h) x + 4 h u\qty(x - \frac{h}{2}) x - 6 u(x) x^{2} + 2 u(x + h) x^{2} + 4 u\qty(x - \frac{h}{2}) x^{2}\right) \\
-            B &= \frac{1}{3 h^{2}} \left(3 h u(x) + h u(x + h) - 4 h u\qty(x - \frac{h}{2}) + 12 u(x) x - 4 u(x + h) x - 8 u\qty(x - \frac{h}{2}) x\right)\\
-            C &= \frac{1}{3 h^{2}} \left(- 6 u(x) + 2 u(x + h) + 4 u\qty(x - \frac{h}{2})\right)
+            A &= \frac{1}{3 h^{2}} \left(3 h^{2} u(x) + 4 h u\qty(x - \frac{h}{2}) x - 3 h u(x) x - h u\qty(x + h) x + 4 u\qty(x - \frac{h}{2}) x^{2} - 6 u(x) x^{2} + 2 u\qty(x + h) x^{2}\right) \\
+            B &= -\frac{1}{3 h^{2}} \left(4 h u\qty(x - \frac{h}{2}) - 3 h u(x) - h u\qty(x + h) + 8 u\qty(x - \frac{h}{2}) x - 12 u(x) x + 4 u\qty(x + h) x\right) \\
+            C &= \frac{2}{3 h^{2}} \left(2 u\qty(x - \frac{h}{2}) - 3 u(x) + u\qty(x + h)\right)
         \end{align}
+        Then note that $u''(x) = 2C = \dfrac{8}{3h^2}u\qty(x - \dfrac{h}{2}) - \dfrac{4}{h^2}u(x) + \dfrac{4}{3h^2}u\qty(x + h)$, which exactly matches with the finite difference formula from part (a).  This means the best possible second derivative approximation using three points is precisely the quadratic through those points.
+        % Substituting these values back into $u(x) = A + Bx + Cx^2$ yields
+        % \begin{align}
+        %     u(x) &= \frac{1}{3 h^{2}} \left(3 h^{2} u(x) + 4 h u\qty(x - \frac{h}{2}) x - 3 h u(x) x - h u\qty(x + h) x + 4 u\qty(x - \frac{h}{2}) x^{2} - 6 u(x) x^{2} + 2 u\qty(x + h) x^{2}\right) \\
+        %     &\qquad -\frac{1}{3 h^{2}} \left(4 h u\qty(x - \frac{h}{2}) - 3 h u(x) - h u\qty(x + h) + 8 u\qty(x - \frac{h}{2}) x - 12 u(x) x + 4 u\qty(x + h) x\right)x \\
+        %     &\qquad +\frac{2}{3 h^{2}} \left(2 u\qty(x - \frac{h}{2}) - 3 u(x) + u\qty(x + h)\right)x^2
+        % \end{align}
 \end{enumerate}
 
 \end{document}
