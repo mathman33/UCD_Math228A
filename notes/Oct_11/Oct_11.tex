@@ -1,0 +1,185 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{October 11, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Recall}
+        \begin{align}
+            u_{xx} = f \qquad u(0) = \alpha \qquad u(1) = \beta
+        \end{align}
+        discretize this to get
+        \begin{align}
+            A\vec{u} = \vec{b}
+        \end{align}
+        where
+        \begin{align}
+            A = \frac{1}{h^2}\qty(\begin{array}{cccccc}
+                -2 & 1 & 0 & \dots & \dots & 0 \\
+                1 & -2 & 1 & 0 & \dots & 0 \\
+                0 & 1 & -2 & 1 & \dots & 0 \\
+                \vdots & \vdots & \ddots & \ddots & \ddots & \vdots \\
+                0 & 0 & \dots & 1 & -2 & 1 \\
+                0 & 0 & \dots & 0 & 1 & -2
+            \end{array})
+        \end{align}
+
+    \section{How to Solve the Linear System}
+        \subsection{Solve by Gaussian Elimination}
+            \begin{align}
+                A = LU = \qty(\text{lower triangular matrix with ones on the diagonal})\cdot\qty(\text{upper triangular matrix})
+            \end{align}
+            So,
+            \begin{align}
+                A\vec{u} &= \vec{b} \\
+                LU\vec{u} &= \vec{b} \\
+                L\vec{v} &= \vec{b} \qquad \text{with } \vec{v} = U\vec{u} \\
+                U\vec{u} = L^{-1}\vec{b} = \vec{v}
+            \end{align}
+            How expensive (computationally) is this?  In general, if $A$ is an arbitrary $n\times n$ matrix, the work is $\order{n^3}$ (costly).  But the work to solve the triangular system is $\order{n^2}$.  But even better, $A$ is a tri-diagonal matrix, so..
+        \subsection{$LU$ decomposition of tridiagonal matrices}
+            \begin{align}
+                \qty(\begin{array}{cccccc}
+                    -2 & 1 & & & & \\
+                    1 & -2 & 1 & & & \\
+                    & 1 & -2 & 1 & & \\
+                    & & \ddots & \ddots & \ddots & \\
+                    & & & 1 & -2 & 1 \\
+                    & & & & 1 & -2
+                \end{array}) = \qty(\begin{array}{ccccc}
+                    1 & & & & \\
+                    -\frac{1}{2} & 1 & &\\
+                    & -\frac{2}{3} & 1 & \\
+                    & & \ddots & \ddots \\
+                    & & & -\frac{n-1}{n} & 1
+                \end{array})\qty(\begin{array}{ccccc}
+                    -\frac{2}{1} & 1 & & & \\
+                    & -\frac{3}{2} & 1 & & \\
+                    & & \ddots & \ddots & \\
+                    & & & -\frac{n+1}{n} & 1 
+                \end{array})
+            \end{align}
+            Work to factor is $\order{n}$.  Work to solve is also $\order{n}$.  Tridiagonal solvers are \emph{fast} (Thomas algorithm).  In Matlab $\texttt{y = A\textbackslash b}$  But make $A$ sparse!
+    
+    \section{Last time we showed}
+        \begin{align}
+            A\vec{e} = \vec{\tau} \\
+            \norm{A}_2 = \order{1} \\
+            \norm{\vec{e}}_2 = \norm{A^{1-}\vec{\tau}}_2 \leq \norm{A^{-1}}_2\norm{\vec{\tau}}_2 = \order{h^2}
+        \end{align}
+        We saw an example where
+        \begin{align}
+            \norm{\vec{e}}_\infty = \order{h^2}
+        \end{align}
+        Is this true in general?  Try norm equivalence?
+        \begin{align}
+            \underbrace{c\norm{\vec{e}}_\infty \leq \norm{\vec{e}}_2}_{\text{try this}} \leq C\norm{\vec{e}}_\infty
+        \end{align}
+        \begin{align}
+            \norm{\vec{e}}_2 = \sqrt{h}\qty(\sum_{j=1}^n e_j^2)^{\frac{1}{2}} \geq \sqrt{h}\max_j\abs{e_j} = \sqrt{h}\norm{\vec{e}}_\infty
+        \end{align}
+        So,
+        \begin{align}
+            \sqrt{h}\norm{\vec{e}}_\infty \leq \norm{\vec{e}}_2 \leq Ch^2
+        \end{align}
+        So we get a sloppy bound on the error...
+        \begin{align}
+            \norm{\vec{e}}_\infty \leq Ch^{\frac{3}{2}}
+        \end{align}
+        but we can do better.
+        \subsection{Max-norm analysis}
+            Lets solve
+            \begin{align}
+                A\vec{u} = \vec{b}
+            \end{align}
+            where
+            \begin{align}
+                \vec{b}_i = \begin{cases}
+                    1 & \text{ if } i=j \\
+                    0 & \text{ if } i \neq j
+                \end{cases}
+            \end{align}
+            where $j$ is fixed. \\
+
+            For $i = 1, \dots, j - 1$ we have
+            \begin{align}
+                \frac{u_{i=1} - 2u_i + u_{i+1}}{h^2} = 0 \qquad u_0 = 0 \qquad u_j = U
+            \end{align}
+            Solve by guessing a linear function of $x_i$.  For $i < j$,
+            \begin{align}
+                u_i = \frac{U}{x_j}x_i
+            \end{align}
+            For $i > j$,
+            \begin{align}
+                u_i = \frac{U(1 - x_i)}{1 - x_j}
+            \end{align}
+            At $i = j$,
+            \begin{align}
+                \frac{u_{j-1} - 2u_j + u_{j+1}}{h^2} = 1 \\
+                \frac{Ux_{j-1}}{x_j} - 2U + \frac{U(1 - x_{j+1})}{1 - x_j} = h^2 \\
+                \implies U = h(x_j - 1)x_j
+            \end{align}
+            The solution is
+            \begin{align}
+                u_i = \begin{cases}
+                    h(x_j - 1)x_i & \text{ if } i \leq j \\
+                    h(x_i - 1)x_j & \text{ if } i > j
+                \end{cases}
+            \end{align}
+            This is the $i$\textsuperscript{th} element of the $j$\textsuperscript{th} column of $A^{-1}$.  This is the discrete version of Green's function. \\
+
+            SO! \\
+
+            \begin{align}
+                \norm{A^{-1}}_\infty = \max_i \sum_{j=1}^n \abs{A^{-1}_{ij}} \leq nh \leq 1
+            \end{align}
+            This tells us
+            \begin{align}
+                \norm{\vec{e}}_\infty \leq \norm{A^{-1}}_\infty \norm{\vec{\tau}}_\infty = \order{h^2}
+            \end{align}
+
+            \begin{align}
+                A^{-1} = B \\
+                \vec{e} = B\vec{\tau} = \sum_{i=1}^n\qty(\begin{array}{c} \hphantom{\cdot} \\ b_i \\ \hphantom{\cdot} \end{array})\vec{\tau}_i
+            \end{align}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
