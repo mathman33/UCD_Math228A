@@ -1,0 +1,237 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\ran}{\text{ran}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{October 13, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Last Time}
+        \begin{align}
+            A = \frac{1}{h^2}\qty(\begin{array}{ccccc}
+                -2 & 1 & & & \\
+                1 & -2 & 1 & \\
+                & & \ddots & & \\
+                & & 1 & -2 & 1 \\
+                & & & 1 & -2
+            \end{array})
+        \end{align}
+        Compute the inverse of $A$, $A^{-1} = B$:
+        \begin{align}
+            B_{ij} = \begin{cases}
+                h(x_j - 1)x_i & \text{ for } i \leq j \\
+                h(x_i - 1)x_j & \text{ for } i > j
+            \end{cases}
+        \end{align}
+
+    \section{Error analysis}
+        \begin{align}
+            A\vec{e} = -\vec{\tau} \\
+            \vec{e} = -A^{-1}\vec{\tau} = -B\vec{\tau}
+        \end{align}
+        How does error at a point influence overall error?
+        \begin{align}
+            B\tau = \qty(\begin{array}{cccc}
+                \vdots & \vdots & \vdots & \vdots \\
+                \vec{b}_1 & \vec{b}_2 & \dots & \vec{b}_n \\
+                \vdots & \vdots & \vdots & \vdots
+            \end{array})\qty(\begin{array}{c}
+                \tau_1 \\ \vdots \\ \tau_n
+            \end{array}) = \sum_{j=1}^n \vec{b}_j \tau_j
+        \end{align}
+        How much does truncation at a point affect the error?
+
+        \subsection{Interior point}
+            Consider an interior point.  Graphing $B_{ij}$ for fixed $j$ gives a downward facing triangle (discrete Green's function).  The tip, $b_{jj}$ is the largest element.  We know $b_{jj} = \order{h}$.  We also know $\tau_j = \order{h^2}$ and so each term in $\sum_{j=1}^n \vec{b}_j \tau_j$ is $\order{h^3}$.  But there are $\order{\frac{1}{h}}$ terms in the sum. \\
+
+        \subsection{Points near a boundary}
+            What about near a boundary?  Let $\vec{b}_1$ be the biggest element.
+            \begin{align}
+                B_1 = h(x_1-1)x_1 = h(h-1)h = h^2(h-1) = \order{h^2}
+            \end{align}
+            So,
+            \begin{align}
+                \vec{b}_1\tau_1 = \order{h^4}
+            \end{align}
+            which is intuitive since there is no error on the boundary, so there is smaller error near the boundary.
+
+    \section{Neumann Boundary Conditions}
+        Two questions:
+        \begin{enumerate}
+                \item How to discretize
+                \item How to solve the linear system
+        \end{enumerate}
+
+        \subsection{Left Boundary (Right boundary is analagous)}
+            $x_0 = 0$, $x_1 = h$, $x_2 = 2h$, and so on.  Also pin down
+            \begin{align}
+                u_x(0) = g
+            \end{align}
+            We have
+            \begin{align}
+                \frac{1}{h^2}\qty(u_0 - 2u_1 + u_2) = f
+            \end{align}
+            We should discretize the boundary condition:
+            \begin{align}
+                \frac{1}{h}\qty(u_1 - u_0) = g
+            \end{align}
+            Load them up in a matrix:
+            \begin{align}
+                \qty(\begin{array}{cccccc}
+                    -h & h & & & \\
+                    1 & -2 & 1 & & \\
+                    & 1 & -2 & 1 && \\
+                    & & \ddots & \ddots & \ddots \\
+                \end{array})
+            \end{align}
+            and
+            \begin{align}
+                \vec{u} = \qty(\begin{array}{c} g \\ f_1 \\ \vdots \end{array})
+            \end{align}
+            We can solve the first equation $u_0 = u_1 - hg$ and then plug it in to the equation at the first ineriour park.  So,
+            \begin{align}
+                \frac{1}{h^2}\qty(u_1 - hg - u_1 = u_2) = f_1 \\
+                \implies \frac{1}{h^2}\qty(u_2 - u_1) = f_1 + \frac{g}{h}
+            \end{align}
+            So,
+            \begin{align}
+            A = \frac{1}{h^2}\qty(\begin{array}{ccccc}
+                -1 & 1 & & & \\
+                1 & -2 & 1 & \\
+                & & \ddots & & \\
+                & & 1 & -2 & 1 \\
+                & & & 1 & -1
+            \end{array})
+            \end{align}
+
+            \begin{align}
+                \vec{u} = \qty(\begin{array}{c}f_1 + \frac{g}{h} \\ f_2 \\ \vdots \end{array})
+            \end{align}
+            But this is only first order accurate.  Another discretization:
+            \begin{align}
+                \frac{u_1 - u_0}{h} = u_x(0) + \order{h^2}
+            \end{align}
+            and
+            \begin{align}
+                \frac{u_1 - u_0}{h} = u_x\qty(\frac{h}{2}) + \order{h^2}
+            \end{align}
+
+            Imagine we are extending the domain: ghost point $x_{-1} = -h$.  Our equation at $x = 0$ is
+            \begin{align}
+                {u_{-1} - 2u_0 + u_1}{h^2} = f_0
+            \end{align}
+            Discretize about $x_0$.
+            \begin{align}
+                \frac{u_1 - u_{-1}}{2h} = g
+            \end{align}
+            which implies
+            \begin{align}
+                u_{-1} = u_1 - 2hg
+            \end{align}
+            this is a way to extrapolate from the interior.  So we get
+            \begin{align}
+                \frac{u_1 - 2hg - 2u_0 + u_1}{h^2} = f_0 \\
+                \frac{-2u_0 + 2u_1}{h_2} = f_0 + \frac{2g}{h}
+            \end{align}
+            So the second order method is
+            \begin{align}
+                \frac{1}{h^2}\qty(\begin{array}{ccccc}
+                    -2 & 2 & & & \\
+                    1 & -2 & 1 & & \\
+                    & & \ddots & &
+                \end{array})\qty(\begin{array}{c}
+                    u_0 \\ u_1 \\ \vdots
+                \end{array}) = \qty(\begin{array}{c}
+                    f_0 + \frac{2g}{h} \\ f_1 \\ \vdots
+                \end{array})
+            \end{align}
+            But this is not symmetric, so
+            \begin{align}
+                \frac{1}{h^2}\qty(\begin{array}{ccccc}
+                    -1 & 1 & & & \\
+                    1 & -2 & 1 & & \\
+                    & & \ddots & &
+                \end{array})\qty(\begin{array}{c}
+                    u_0 \\ u_1 \\ \vdots
+                \end{array}) = \qty(\begin{array}{c}
+                    \frac{1}{2}f_0 + \frac{g}{h} \\ f_1 \\ \vdots
+                \end{array})
+            \end{align}
+            In the homework we will get at a finite volume discretization.  Very natural with Neumann boundary problems.
+
+        \subsection{Solvability}
+            \begin{align}
+                u_{xx} = f \qquad x \in (0,1) \qquad u_x(0) = \alpha \qquad u_x(1) = \beta
+            \end{align}
+            Physically, there must be a constraint on $f$, $\alpha$, and $\beta$.  They have to have some steady balance of some sort.  We integrate this equation:
+            \begin{align}
+                \int_0^1 u_{xx}\dd x = \int_0^1f(x) \dd \implies \boxed{\beta - \alpha = \int_0^1 f(x) \dd x} \qquad \text{by the Fundamental Theorem of Calculus}
+            \end{align}
+            This is a necessary condition for a solution to exist for the problem.
+
+            Supposing $u$ is a solution to the problem.  Then $u + C$ for any constant is also a solution.  This is because $u_x$ and $u_{xx}$ are the same as $(u + C)_x$ and $(u + C)_{xx}$.
+
+            Let's discretize this:
+            \begin{align}
+                \frac{1}{h^2}\qty(\begin{array}{ccccc}
+                    -2 & 2 & & & \\
+                    1 & -2 & 1 & & \\
+                    & & \ddots & &  \\
+                    & & 1 & -2 & 1 \\
+                    & & & 2 & -2
+                \end{array})\qty(\begin{array}{c}
+                    u_0 \\ u_1 \\ \vdots \\ u_n \\ u_{n+1}
+                \end{array}) = \qty(\begin{array}{c}
+                    f_0 + \frac{2\alpha}{n} \\ f_1 \\ \vdots \\ f_n \\ f_{n+1} - \frac{2\beta}{n}
+                \end{array})
+            \end{align}
+            It turns out this matrix is singular.  Notice if $\vec{u}$ is a solution.  Then $\vec{u} + \vec{c} = \vec{u} + c\vec{1}$ is also a solution.  It turns out $\vec{1}$ spans the null space, i.e.~$\vec{1}$ is the eigenvector corresponding to the eigenvalue $0$.  $A\vec{1} = \vec{0}$.
+
+            \begin{align}
+                A\vec{u} = \vec{b}
+            \end{align}
+            has a solution if $\vec{b} \in \ran(A)$, i.e.~$\vec{b}\perp \ker(A^*)$.  For matrices, if $A$ is $n\times n$, adn $\vec{b} \in \Rl^n$.  Then
+            \begin{align}
+                \vec{b} = \vec{b}_r + \vec{b}_0
+            \end{align}
+            where $\vec{b}_r \in \ran(A)$ and $\vec{b}_0 \in \ker(A^*)$.  Furthermore, $\vec{b}_r \cdot \vec{b}_0 = 0$.  To guarantee $\vec{b} \in \ran(A)$, just show $\vec{b} \perp \ker(A^*)$.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
