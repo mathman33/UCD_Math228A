@@ -1,0 +1,211 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\ran}{\text{ran}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{October 18, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Recall from last time}
+        \begin{align}
+            u_{xx} = f \qquad u_x(0) = \alpha \qquad u_x(1) = \beta
+        \end{align}
+        The boundary values are unknown, and we do a second order discretization:
+        \begin{align}
+            \frac{1}{h^2}\qty(\begin{array}{ccccc}
+                        -2 & 2 & & & \\
+                        1 & -2 & 1 & & \\
+                        & \ddots & \ddots & \ddots &  \\
+                        & & 1 & -2 & 1 \\
+                        & & & 2 & -2
+                    \end{array})\vec{u} = \qty(\begin{array}{c}
+                        f_0 + \frac{2\alpha}{h} \\ f_1 \\ \vdots \\ f_N \\ f_{N+1} - \frac{2\beta}{h}
+                    \end{array})
+        \end{align}
+        The solution is not unique.  Condition for a solution:
+        \begin{align}
+            \int_0^1 f(x) \dd x = \beta - \alpha
+        \end{align}
+        (this is derived by requiring $f$ to be orthogonal to the kernel of the adjoint of $\frac{\partial^2}{\partial x^2}$).
+        Let
+        \begin{align}
+            A = \frac{1}{h^2}\qty(\begin{array}{ccccc}
+                    -2 & 2 & & & \\
+                    1 & -2 & 1 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & 1 & -2 & 1 \\
+                    & & & 2 & -2
+                \end{array})
+        \end{align}
+        and note that $A\vec{1} = \vec{0}$ (i.e.~the sum of each row is $0$) and thus $\vec{1} \in \ker(A)$.  In fact, $\ker(A) = \qty[\vec{1}]$.  This means $A$ is singular (which makes sense since the PDE has non-unique solutions).
+
+    \section{Discretization}
+        Suppose we have $A\vec{u} = \vec{b}$ but $A$ is singular.  For this to have a solution, we require $b \in \ran(A)$, i.e.~$b \perp \ker(A^*)$.  If $\dim\ker(A^*) = n$, this translates to $n$ requirement.
+
+        For $A$ given above,
+        \begin{align}
+             A^* = \frac{1}{h^2}\qty(\begin{array}{ccccccc}
+                    -2 & 1 & & & \\
+                    -2 & -2 & 1 & & \\
+                    & 1 & -2 & 1 \\
+                    & & \ddots & \ddots & \ddots &  \\
+                    & & & 1 & -2 & 1 \\
+                    & & & & 1 & -2 & 2 \\
+                    & & & & & 1 & -2
+                \end{array})
+        \end{align}
+        and note
+        \begin{align}
+            \vec{v} = \qty(\begin{array}{c}
+                \frac{1}{2} \\ 1 \\ 1 \\ \vdots \\ 1 \\ 1 \\ \frac{1}{2}
+            \end{array})
+        \end{align}
+        spans $\ker(A^*)$.  So $b \in \ran(A)$ if $\vec{v}^T\cdot \vec{b} = 0$ (i.e.~$b \perp \ker(A^*)$).  This translates to
+        \begin{align}
+            \frac{1}{2}f_0 + \frac{\alpha}{h} + f_1 + \dots + f_N + \frac{1}{2}f_{N+1} - \frac{\beta}{h} &= 0 \\
+            \frac{h}{2}f_0 + h\sum_{j=1}^Nf_j + \frac{h}{2}f_{N+1} = \beta - \alpha
+        \end{align}
+        This precisely matches the continuous condition (it is a trapezoidal approximation to the integral):
+        \begin{align}
+            \frac{h}{2}f_0 + h\sum_{j=1}^Nf_j + \frac{h}{2}f_{N+1} = \int_0^1 f(x) \dd x + \order{h^2}
+        \end{align}
+        One caveat is that even if $\int_0^1 f(x) \dd x = \beta - \alpha$ holds, the discrete condition $\vec{v}^T \cdot \vec{b} = 0$ may not hold.
+
+        One way to solve $A\vec{u} = \vec{b}$ is to use an iterative scheme.
+        \begin{align}
+            \vec{u}^{(k+1)} = T\vec{u}^{(k)} + \vec{c}
+        \end{align}
+        To get a solution, we need $\vec{b} \in \ran(A)$.  So we project onto the range: Let $P$ be the orthogonal projection onto the range.
+        \begin{align}
+            P\vec{b} = \vec{b} - \underbrace{\frac{\vec{v}^T \cdot \vec{b}}{\vec{v}^T\cdot \vec{v}}\vec{v}}_{=\order{h^2}} \in \ran(A)
+        \end{align}
+
+    \section{Direct Solve}
+        Perturbed system looks like
+        \begin{align}
+            A\vec{u} = \vec{b} - \lambda \vec{v} \\
+            A\vec{u} + \lambda \vec{v} = \vec{b}
+        \end{align}
+        We've added an unknown: $\lambda$, so we need a new equation.  Let's force the solution with mean $0$, i.e.
+        \begin{align}
+            \vec{1}^T\cdot\vec{u} = 0
+        \end{align}
+        So $\vec{u}$ and $\lambda$ are the unknowns:
+        \begin{align}
+            \qty(\begin{array}{c}
+                \vec{u} \\ \hdashline[2pt/2pt] \lambda
+            \end{array}) = \left(\begin{array}{c;{2pt/2pt}c}
+                A & \vec{v} \\ \hdashline[2pt/2pt] \vec{1}^T & 0
+            \end{array}\right)\qty(\begin{array}{c}
+                \vec{b} \\ \hdashline[2pt/2pt] 0
+            \end{array})
+        \end{align}
+
+    \section{2D Equation}
+        \begin{align}
+            \laplacian u = f \qquad \text{ on } (0,1)^2            
+        \end{align}
+        and Dirichet boundaries.  Supposing equal spacing in $x$ and $y$ directions (regular grid),
+        \begin{align}
+            u_{xx} + u_{yy} = f
+        \end{align}
+        $x_i = ih$, $y_j = jh$, for $i,j = 0, 1, \dots, n+1$ with $h = \frac{1}{n+1}$.  So $u_{ij} = u(x_i,y_j)$.
+
+        \begin{align}
+            (u_{xx})_{ij} &\approx \frac{u_{i-1,j} - 2u_{ij} + u_{i+1,j}}{h^2} \\
+            (u_{yy})_{ij} &\approx \frac{u_{i,j-1} - 2u_{ij} + u_{i,j+1}}{h^2}
+        \end{align}
+        So the discrete approximate equation is
+        \begin{align}
+            \frac{u_{i-1,j} + u_{i,j-1} - 4u_{ij} + u_{i+1,j} + u_{i,j+1}}{h^2} = f_{ij}
+        \end{align}
+        Stensil of the difference operator:
+        \begin{align}
+            \frac{1}{h^2}\qty[\begin{array}{ccc}
+                & 1 & \\
+                1 & -4 & 1 \\ 
+                & 1 &
+            \end{array}]
+        \end{align}
+        We get $n^2$ linear equations: $A\vec{u} = \vec{b}$.  To use this form we need to arrange $u_{ij}$ into a vector.  The standard way is row-wise ordering.  For example:
+        \begin{align}
+            \qty[\begin{array}{ccc}
+                \text{seventh} & \text{eigth} & \text{ninth} \\
+                \text{fourth} & \text{fifth} & \text{sixth} \\
+                \text{first} & \text{second} & \text{third} \\
+            \end{array}]
+        \end{align}
+        So
+        \begin{align}
+            \vec{u} = \qty(\begin{array}{c} u_{11} \\ u_{21} \\ u_{31} \\ u_{12} \\ u_{22} \\ u_{32} \\ u_{13} \\ u_{23} \\ u_{33} \end{array})
+        \end{align}
+        What does the matrix look like (in general, not $9\times 9$)?  We get a penta-diagonal structure.  
+        \begin{align}
+            A = \frac{1}{h^2}\qty(\begin{array}{ccccccccccc}
+            & \cdots & 1 & \cdots & 1 & -4 & 1 & \cdots & 1 & \cdots &
+            \end{array})
+        \end{align}
+        with $1$'s on the $1$\textsuperscript{th} and $n$\textsuperscript{th} sub-~and super-diagonals.
+
+    \section{3D Equation}
+        The 3D equation is similar, but the diagonal has a septa-diagonal structure:
+        \begin{align}
+            A = \frac{1}{h^2}\qty(\begin{array}{ccccccccccccccccc}
+            & \cdots & 1 & \cdots & \cdots & 1 & \cdots & 1 & -6 & 1 & \cdots & 1 & \cdots & \cdots & 1 & \cdots &
+            \end{array})
+        \end{align}
+        with $1$'s on the $1$\textsuperscript{th}, $n$\textsuperscript{th}, and $(n^2)$\textsuperscript{th} sub-~and super-diagonals.  Conceptually there is not much difference between 2D and 3D, but computationally, there is a lot less sparsity in 3D, and so it is much, much more expensive.
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
