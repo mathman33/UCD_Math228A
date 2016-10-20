@@ -1,0 +1,172 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\ran}{\text{ran}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{October 20, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Recall From Last Time}
+        In a 2D grid, standard stensil:
+        \begin{align}
+            \qty[\begin{array}{ccc}
+                & 1 & \\
+                1 & -4 & 1 \\
+                & 1 &
+            \end{array}]
+        \end{align}
+        When re-ordered in a vector, Laplacian matrix has $-4$ on the diagonal and $1$ on the $\nth{1}$ and \enth sup-~and super-diagonals.  In a 3D grid, the matrix has $-6$ on the diagonal and $1$ on the $\nth{1}$, \enth, and $\qty(n^2)$th sub-~and super-diagonals.
+
+        Using Gaussian Elimination gives fill-in between the bands.  What is the operation count?  Suppose a diagonal matrix with band-width $b$ on the sub-diagonals and band-width $a$ on the super-diagonals ($N\times N$ matrix).  Work to factor?  $\order{abN}$.
+
+        In 2D, $N = n^2$, $a = b = n$.  So work is $\order{n^4} = \order{N^2}$.  This is less than $\order{N^3}$ (work to factor unstructured matrix), but higher than the optimal.  Back/forward solves is $\order{Nn} = \order{n^3} = \order{N^{\frac{3}{2}}}$.
+
+        In 3D, $N = n^3$, $a = b = n^2$.  So work is $\order{n^7} = \order{N^{\frac{7}{3}}}$.  This is less than $\order{N^3}$ but higher than the optimal.  Back/forward solves is $\order{Nn^2} = \order{n^5} = \order{N^{\frac{5}{3}}}$.
+
+    \section{Memory Allocation in 3D}
+        We need to 
+        \begin{itemize}
+            \item store the original matrix ($\order{N}$).
+            \item store the factored matrix ($\order{N^{\frac{5}{3}}}$)
+        \end{itemize}
+        What does this mean in terms of computers we actually have?  How big is this for $n = 100$ so we have a $100\times100\times100$ grid.  So $N = 1,000,000$.  $n^5 = 10^{10} = 10,000,000,000$.  This takes about $20$GB to store.. my computer only has $16$GB.
+
+    \section{Fast Fourier Transform}
+        We know the eigenvalues of the 1D problem ($\sin(k\pi x)$).
+
+        Suppose 
+        \begin{align}
+            A\vec{u} = \vec{b}
+        \end{align}\tabularnewline
+        $Q$ is a matrix of eigenvectors, $\Lambda$ diagonal matrix of eigenvalues.
+        \begin{align}
+            AQ = Q\Lambda \qquad \implies \qquad A = Q\Lambda Q^T
+        \end{align}
+        So
+        \begin{align}
+            Q\Lambda Q^T\vec{u} = \vec{b} \implies
+            Q^T\vec{u} = \Lambda^{-1}Q^T\vec{b} \implies
+            \vec{u} = Q\Lambda^{-1}Q^T\vec{b}
+        \end{align}
+        Multiplication by $Q^T$ can be done using FFT where work is $\order{N\log{N}}$.  Multiplication by $Q$ is inverse FFT where work is $\order{N\log{N}}$.  This is a very special solver (rectangular domain).
+
+    \section{Block Matrix}
+        In 2D we have
+        \begin{align}
+            A = \frac{1}{h^2}\tridsym{T}{I}{I}
+        \end{align}
+        where
+        \begin{align}
+            T = \tridsym{-4}{1}{1}
+        \end{align}
+        and $I$ is the identity.  Bob \emph{thinks} we can exploit the structure of $A$ to get work $\order{n^{\frac{3}{2}}}$ (nested dissection).
+
+    \section{Convergence in 2D}
+        In 1D, we did $2$ norm (by knowing the eigenvectors) and max-norm (by just finding the inverse).
+
+        In 2D,
+        \begin{align}
+            A\vec{e}^h = -\vec{\tau}^h
+        \end{align}
+        where $\vec{e}^h$ is the error and $\vec{\tau}^h$ is the LTE (local truncation error).  For 2-norm, we use the same idea as in 1D - we know the eigenvectors (discrete eigenfunctions)!  Their form is
+        \begin{align}
+            u_{ij}^{km} = \sin(k\pi x_i)\sin(m\pi y_j)
+        \end{align}
+        The eigenvalues are
+        \begin{align}
+            \lambda^{km} = \frac{2}{h^2}\qty(\cos(k\pi h) + \cos(m\pi h) - 2)
+        \end{align}
+        Use these to find the spectral radius (and then the 2-norm).
+
+        We will use 3 steps for proving convergence max-norm in 2D.
+        \begin{enumerate}
+            \item
+                Discrete maximum principle.  Think of the operator $L$
+                \begin{align}
+                    L\vec{u} = \vec{f}
+                \end{align}
+                If $Lu \geq 0$ for some region, then the maximum value of $u$ is attained on the boundary (same idea as in 1D - if a function is concave up, its maximum is one of the boundaries).  Similar statement about $Lu \leq 0$ (concave down).
+            \item
+                If $u$ is a discrete function, $u = 0$ on the boundary (lets just say discrete unit square), then
+                \begin{align}
+                    \norm{u}_\infty = \frac{1}{8}\norm{Lu}_\infty
+                \end{align}
+                How can we use this?  We can relate $\vec{e}$ and $\vec{\tau}$ by
+                \begin{align}
+                    L\vec{e} = -\vec{\tau}
+                \end{align}
+                Using \#2,
+                \begin{align}
+                    \norm{\vec{e}}_\infty \leq \frac{1}{8}\norm{L3}_\infty = \frac{1}{8}\tau_\infty = \order{h^2}
+                \end{align}
+        \end{enumerate}
+
+        \begin{align}
+            \frac{1}{h^2} \qty(u_{i-1,j} + u_{i,j-1} - 4 u_{i,j} + u_{i+1,j} + u_{i+1,j+1}) \geq 0 \implies \frac{1}{4}u_{i-1,j}
+        \end{align}
+        If $u_{ij}$ ia a max, than all neighbors must be equal.  The function is constant.
+
+        Idea of (2.):  If $L\vec{u} = f$, suppose $u$ is zero on the boundary.
+        \begin{align}
+            w_{ij} = \frac{1}{4}\qty[\qty(x_i - \frac{1}{2})^2 + \qty(y_j - \frac{1}{2})^2]
+        \end{align}
+        Lw = 1.  So
+        \begin{align}
+            L(u + w\norm{\infty}) = f + \norm{f}_\infty \geq 0
+        \end{align}
+        Finally we know $\max(u _ w \norm{f}_\infty)$ is on the boundary.  So $u \leq u + \norm{f}_\infty w \leq \max(w)\norm{f}_\infty = \dfrac{1}{8}\norm{f}_\infty$.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
