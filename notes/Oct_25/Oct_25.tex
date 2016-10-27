@@ -1,0 +1,165 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\ran}{\text{ran}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{October 25, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Iterative Methods}
+        The notation $A\vec{u} = \vec{b}$ looks like a linear problem, and $L\vec{u} = \vec{f}$ looks nonlinear, but today they will be interchangable (ugh).  The algebraic solution is
+        \begin{align*}
+            \vec{u} = \vec{u}_\text{sol} + \order{h^2}
+        \end{align*}
+        where $\vec{u}_\text{sol}$ is the exact solution to the PDE.  Since we are not getting an exact solution anyway, so maybe we don't need to solve the algebraic system exactly.  An approximate algebraic solution within $\order{h^2}$ is good enough.
+
+        Suppose $\vec{u}^k$ is an approximate solution $L\vec{u} = \vec{f}$ and say $\vec{u}$ is the exact solution of the linear algebra problem (not the PDE).  Define the algebraic error $\vec{e}^k = \vec{u} - \vec{u}^k$.  As long as $\vec{e}^k = \order{h^2}$, then we're golden.  Think of $L$ as the discrete operator:
+        \begin{align*}
+            L\vec{e}^k = L\vec{u} - L\vec{u}^k = \vec{f} - L\vec{u}^k \eqqcolon \text{residual (defect)} = \vec{r}^k
+        \end{align*}
+        This is, $L\vec{e}^k = \vec{r}^k$ is a measure of how ``off'' the approximation is.  The ``correction equation is''
+        \begin{align*}
+            \vec{u} = \vec{u}^k + \vec{e}^k = \vec{u}^k + L^{-1}\vec{r}^k
+        \end{align*}
+        This seems useless, since if we had $L^{-1}$, we would just apply it to $f$.  But let $B \approx L^{-1}$.  Then an example iterative scheme is 
+        \begin{align*}
+            \vec{u}^{k+1} = \vec{u}^k + B\vec{r}^k
+        \end{align*}
+        If $B$ is a good approximation of $L^{-1}$, then we hope $\vec{u}^{k+1}$ is a better approximation to $\vec{u}$ than $\vec{u}^k$.
+        
+        \subsection{Diagonal Matrices}
+            Let $B = D^{-1}$ where $D$ is the diagonal part of $L$, that is $(d_{ij}) = \delta_{ij}\ell_{ij}$ where $\delta$ is the Kroenecker Delta function.
+            \begin{align*}
+                \vec{u}^{k+1} = \vec{u}^k + D^{-1}\vec{r}^k = \vec{u}^k + D^{-1}(\vec{f} - L\vec{u}^k) = \qty(I - D^{-1}L)\vec{u}^k + D^{-1}\vec{f}
+            \end{align*}
+            In 2D, $D = -\frac{4}{h^2}I$ so $D^{-1} = -\frac{h^2}{4}I$  That is,
+            \begin{align*}
+                \vec{u}^{k+1} = \qty(I + \frac{h^2}{4}L)\vec{u}^k - \frac{h^2}{4}\vec{f}
+            \end{align*}
+            At each point,
+            \begin{align*}
+                \vec{u}_{ij}^{k+1} &= u_{ij}^k + \frac{h^2}{4}\qty(\frac{u_{i-1,j}^k + u_{i+1,j}^k - u_{ij}^k + \vec{u}_{i,j-1}^k + \vec{u}_{i,j+1}^k}{h^2}) - \frac{h^2}{4}\vec{f}_{ij} \\
+                &= \frac{1}{4}\qty(\vec{u}_{i-1,j} + \vec{u}_{i,j-1} + \vec{u}_{i,j-1} - \vec{u}_{i,j+1}) - \frac{h^2}{4}\vec{f}_{ij}
+            \end{align*}
+            So we solve the equations one point at a time.  FOr this problem, this method converges, but only very slowly.
+
+        \subsection{Pseudocode}
+            Jacobi Iteration
+            \begin{itemize}[label={}]
+                \item Define $F = \frac{h^2}{4}f$
+                \item Loop in $k$
+                \begin{itemize}[label={}]
+                    \item Loop in $i$
+                    \begin{itemize}[label={}]
+                        \item Loop in $j$
+                        \begin{itemize}[label={}]
+                            \item $V_{ij} = 0.25(u_{i-1,j} + u_{i+1,j} + u_{i,j-1} + u_{i,j+1}) - F_{ij}$
+                            \item end
+                        \end{itemize}
+                        \item end
+                    \end{itemize}
+                    \item end
+                    \item Set $u = V$
+                \end{itemize}
+                \item end
+            \end{itemize}
+            Supposing you want to exploit the ``better'' solutions behind the $ij$th point, then replace $V_{ij}$ with $u_{ij}$.  This is called Gauss-Seidel (Lex) Iteration.  It turs out that for our model problem, this converges faster than Jacobi iteration, but is still slow.  Jacobi is parallelizable, however, since it does not depend on present information.
+
+        \section{Analysis}
+            Think of both methods as splitting methods $A\vec{u} = \vec{b}$.  Split $A = M - N$ where $M$ is easy to invert.  So $M\vec{u} - N\vec{u} = \vec{b}$.  Thus,
+            \begin{align*}
+                M\vec{u} = N\vec{u} + b
+            \end{align*}
+            so
+            \begin{align*}
+                \vec{u}^{k+1} = M^{-1}N\vec{u}^k + M^{-1}\vec{b}
+            \end{align*}
+            So $A = D - L - U$ where $-L$ and $-U$ are the lower and upper trianglar parts.  So, for Jacobi Iteration, $M = D$, $N = L + U$.  Thus
+            \begin{align*}
+                D\vec{u}^{k+1} = (L+U)\vec{u}^k + \vec{b} \qquad \implies \qquad \vec{u}^{k+1} = D^{-1}\qty(L+U)\vec{u}^k + D^{-1}\vec{b}
+            \end{align*}
+            and GS (lex) has $M = D - L$ and $N = U$.  Thus
+            \begin{align*}
+                \vec{u}^{k+1} = \qty(D - L)^{}U\vec{u}^{k} + \qty(D - L^{-1})\vec{b}
+            \end{align*}
+            Both methods are fomr of the form
+            \begin{align*}
+                U_{k+1} = T\vec{u}_k + C
+            \end{align*}
+            This is a fied point iteration.  When does this converge?
+
+            \subsection{When does this converge?}
+                \begin{align*}
+                    \vec{e}^{k} = \vec{e} - \vec{u}^{k} = T^k\vec{e}^k
+                \end{align*}
+                When does $\vec{e}^{k} \rightarrow 0$?  When does $e\rightarrow 0$?  Only when $\rho(T) < 1$.  Suppose we can diagonalize $T$, $TX = X\Lambda$ where $\Lambda$ is diagonal.  Then
+                \begin{align*}
+                    T &= X \Lambda X^{-1} \\
+                    T^2 &= X\Lambda^2 X^{-1} \\
+                    &\ \vdots \\
+                    T^k &= X\Lambda^k X^{-1}
+                \end{align*}
+                \begin{align*}
+                    \Lambda^k = \qty(\begin{array}{cccc}
+                        \lambda_1^k & & \dots &  \\
+                         & \lambda_2^k & & \\
+                         & & \ddots & \\
+                         & & & \lambda_N^k
+                    \end{array})
+                \end{align*}
+                Then $T^k\vec{e}^0 \rightarrow 0$ for all $\vec{e}^0$ if $\abs{\lambda_\ell} < 1$ for all $\ell = 1, \dots, N$.
+    \end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
