@@ -1,0 +1,202 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\ran}{\text{ran}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{November 1, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Iterative Methods for the Poisson Equation}
+        Linear fixed-point iteration problem: $u_{k+1} = Tu_k + c$.  When should we stop the iteration?  There are two standard ways to figure this out:
+        \begin{enumerate}
+            \item Stop based on the size of the residual, $r_k = f - Au_k$
+            \item Stop based on the size of $u_{k+1} - u_k$
+        \end{enumerate}
+        Use the residual
+        \begin{itemize}
+            \item absolute tolerance $\norm{r_k} < \text{tol} \eqqcolon \E$
+            \item relative tolerance $\norm{r_k} \leq \text{tol}\norm{f}$
+        \end{itemize}
+        Relative tolerance is better.. if $u_0 = 0$, $r_0 = f$.
+
+        Reminder: residual equation: $Ae_k = r_k$ where $e_k$ is the algebraic error on the $k$th iterate.  We want to control $e_k$,
+        \begin{align*}
+            \norm{e_k} = \norm{A^{-1}r_k} \leq \norm{A^{-1}}\norm{r_k} \leq \norm{A^{-1}}\E
+        \end{align*}
+        $\E = Ch^2$... use $u_{k+1} - u_k$
+        \begin{itemize}
+            \item Abslute: $\norm{u_{k+1} - u_k} < \text{tol}$
+            \item Relative: $\norm{u_{k+1} - u_k} < \text{tol}\norm{u_k}$
+        \end{itemize}
+
+    \section{Jac, GS, SOR, Multigrid}
+        \begin{align*}
+            u_{k+1} &= u_k + Br_k, \qquad B \approx A^{-1} \\
+            u_{k+1} - u_k &= Br_k
+        \end{align*}
+        Want to control the error - $\norm{e_k} = \norm{A^{-1}r_k} = \norm{A^{-1}B^{-1}(u_{k+1} - u_k} \leq \norm{A^{-1}B^{-1}}\norm{u_{k+1} - u_k}$.
+
+        \subsection{Jacobi}
+            $B = -\frac{h^2}{4}I$, which implies $\norm{B^{-1}} = \frac{4}{h^2}$.
+
+        \subsection{Ordering of Unknowns}
+            Jacobi does depend on the ordering of unknowns.  GS does.  We did GS-Lex, which is a sweep through of the unknowns - gives some sort of diagonal structure (with streaks at $n$th, $n^2$th, etc.~super- and sub-diagonals).  Another way to order them is label them {\color{red}red} or {\color{blue}blue} (even/odd) so $i + j$ is either even or odd.  Then lexicographic ordering for {\color{red}red} points and THEN for {\color{blue}blue} points.  This is called GS-RB.  Update {\color{red}red} points first, and then {\color{blue}blue} points.
+
+            \subsubsection{GS-Lex Pseudocode}
+            \begin{itemize}
+                \item loop $k$
+                \begin{itemize}
+                    \item loops $i$,$j$
+                    \begin{itemize}
+                        \item $u_{ij} = \frac{1}{4}\qty(u_{i-1,j} + u_{i,j-1} + u_{i+1,j} + u_{i,j+1} - h^2F_{ij})$
+                    \end{itemize}
+                \end{itemize}
+            \end{itemize}
+
+            \subsubsection{GS-RB Pseudocode}
+            \begin{itemize}
+                \item loop $k$
+                \begin{itemize}
+                    \item loop {\color{red}red}
+                    \begin{itemize}
+                        \item $u_{ij} = \frac{1}{4}\qty(u_{i-1,j} + u_{i,j-1} + u_{i+1,j} + u_{i,j+1} - h^2F_{ij})$
+                    \end{itemize}
+                    \item loop {\color{blue}blue}
+                    \begin{itemize}
+                        \item $u_{ij} = \frac{1}{4}\qty(u_{i-1,j} + u_{i,j-1} + u_{i+1,j} + u_{i,j+1} - h^2F_{ij})$
+                    \end{itemize}
+                \end{itemize}
+            \end{itemize}
+
+            \subsubsection{Other variations}
+                Block or line relaxation methods - update groups of points at once.  For example, in 2D, each row is a group - do a 1D solve on each row of points.  This is useful for problems such as
+                \begin{align*}
+                    u_{xx} + \E u_{yy} = f
+                \end{align*}
+    \section{Successive Over Relaxation (SOR) Method}
+        This is a generalization of GS by including a relaxation parameter.
+
+        \subsection{GS}
+            \begin{itemize}
+                \item $u_{ij} = \dfrac{1}{4}\qty(u_{i-1,j} + u_{i,j-1} + u_{i+1,j} + u_{i,j+1} - h^2F_{ij})$
+            \end{itemize}
+
+        \subsection{SOR}
+            \begin{itemize}
+                \item $u_{ij} = \dfrac{\omega}{4}\qty(u_{i-1,j} + u_{i,j-1} + u_{i+1,j} + u_{i,j+1} - h^2F_{ij}) + \qty(1 - \omega)u_{ij}$
+            \end{itemize}
+            Choosing $\omega < 1$ is ``under-relaxation'' and $\omega > 1$ is ``over relaxation''.  SOR requires $\omega \in (0,2)$ for convergence.
+            \begin{align*}
+                A = M - N
+            \end{align*}
+            where $Mu_{k+1} = Nu_k + F$ and so $u_{k+1}M^{-1}Nu_k + M^{-1}F$.  Also,
+            \begin{align*}
+                M = \frac{1}{\omega}D - L \qquad \text{and} \qquad N = \frac{1 - \omega}{\omega}D + U
+            \end{align*}
+            \begin{align*}
+                T_{\text{SOR}} = M^{-1}N = \qty(\frac{1}{\omega}D - L)^{-1}\qty(\qty(\frac{1 - \omega}{\omega})D + U) = \qty(D - \omega L)^{-1}\qty((1 - \omega)D + \omega U) \\
+                \implies \det(T_{\text{SOR}}) = \det((D - \omega L)^{-1})\det((1 - \omega)D + \omega U) = \frac{\det(1 - \omega)D}{\det(D)} = (1 - \omega)^N
+            \end{align*}
+            where $N$ is the number of grid points.  Therefore we require $\abs{1 - \omega} < 1$ (i.e.~$\omega \in (0,2)$).
+
+            \subsubsection{Convergence analysis}
+                Use the same trick to compute the eigenvalues of the update matrix in terms of the eigenvalues of the Jacobi update.  So let $\mu$ be an eigenvalue of the Jacobi update.  Then
+                \begin{align*}
+                    \mu = \frac{\lambda + \omega-1}{\omega\lambda^{\frac{1}{2}}}
+                \end{align*}
+                Rearrange this equation to get
+                \begin{align*}
+                    \lambda - \omega\mu\lambda^{\frac{1}{2}} + (\omega - 1) &= 0 \\
+                    \implies 2\lambda^{\frac{1}{2}} &= \omega\mu \pm \qty(\omega^2\mu^2 - 4(\omega - 1))^{\frac{1}{2}}
+                \end{align*}
+                As $\omega \rightarrow 0$, we see $\lambda \rightarrow 1$.  As $\omega \rightarrow 2$, we have $(4\mu^2 - 4)^{\frac{1}{2}}$ where $\mu < 1$ and thus we have complex eigenvalues.  But if $\lambda \in \Cx\setminus\Rl$, then we have an explicit formula for the modulus of the eigenvalues:
+                \begin{align*}
+                    \abs{\lambda^{\frac{1}{2}}} = \abs{\omega - 1}
+                \end{align*}
+                and so we decrease $\omega$ for better convergence.  If $\lambda \in \Rl$, then
+                \begin{align*}
+                    \frac{\partial \lambda^{\frac{1}{2}}}{\partial \omega} < 0
+                \end{align*}
+                which takes some work, but increasing $\omega$ gives better convergence.  So the optimal $\omega$ satisfies
+                \begin{align}
+                    \qty(\omega^*)^2\mu^2 - 4\qty(\omega^* - 1) &= 0 \\
+                    \implies \omega^* &= \frac{2}{1 + \qty(1 - \rho_J^2)^{\frac{1}{2}}}
+                \end{align}
+                where $\rho_J$ is the spectral radius of the Jacobi update matrix, so $\rho_\text{SOR} = 1 - \omega^*$.
+                \begin{align}
+                    \rho_J = \cos(\pi h)
+                \end{align}
+                \begin{align}
+                    w^* = \frac{2}{1 + (1 - \cos^2(\pi h))^{\dfrac{1}{2}}} = \frac{2}{1 + \sin(\pi h)} = 2(1 - \pi h) + \order{h^2}
+                \end{align}
+                so
+                \begin{align}
+                    \rho_\text{SOR} = 1 - 2\pi h
+                \end{align}
+        \subsection{Number of iterations to reduce error by $10^{-1}$}
+            \begin{align}
+                \begin{array}{||l|l|l||}\hline\hline
+                    N\times N & \text{GS} & \text{SOR} \\\hline\hline
+                    32\times32 & 254 & 12 \\\hline
+                    64\times64 & 985 & 24 \\\hline
+                    128\times128 & 3882 & 47 \\\hline
+                    256\times256 & 15404 & 94\\\hline\hline
+                \end{array}
+            \end{align}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
