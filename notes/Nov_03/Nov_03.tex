@@ -1,0 +1,166 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\ran}{\text{ran}}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{November 3, 2016}
+
+\begin{document}
+    \maketitle
+
+    \subsubsection{Announcement}
+        Moving to Briggs book
+
+    \section{Last Time - SOR method}
+        \begin{align}
+            \omega^* &= \frac{2}{1 + \qty(1 - \rho_J^2)^\frac{1}{2}}, \qquad \rho_\text{SOR} = \omega^* - 1 \\
+            \omega^* &= \frac{2}{1 + \sin(\pi h)} = 2\qty(1 - \pi h) + \order{h^2}
+        \end{align}
+        using Taylor expansions.  So,
+        \begin{align}
+            \rho_\text{SOR} = 1 - 2\pi h
+        \end{align}
+
+        Iteration count for GS: on $256^2$ mesh, the number of iterations per digit of accuracy is $15409$.  SOR requires $94$ iterations.
+
+    \section{Scaling on the work of SOR to converge to a tolerance equal to $Ch^2$}
+        Assume the spectral radius has a power relationship with $Ch^2$, i.e.
+        \begin{align}
+            \rho^k = Ch^2 \qiq k = \frac{\ln(Ch^2)}{\ln(\rho)}
+        \end{align}
+        but we have $\rho \approx 1 - 2\pi h \approx -2\pi h$, so
+        \begin{align}
+            k \approx \frac{\ln(C) + \ln(h^2)}{-2\pi h} \qiq k = \order{h^{-1}\ln(h)}
+        \end{align}
+        In 2D, $h\sim \frac{1}{n}$ where $n$ is the number of points in each direction.  $N = n^2$ is the total number of points.  So
+        \begin{align}
+            k = \order{N^\frac{1}{2}\ln(N)}
+        \end{align}
+        The work per iteration is $\order{N}$, and thus work to solve is $\order{N^\frac{3}{2}\ln(N)}$.  One drawback is that we need to know $\omega^*$.  We expect $\omega^* = \dfrac{2}{1 + Ch}$.  Graphing spectral radius as a function of $\omega$ gives us a corner..
+        \begin{figure}[ht!]
+            \centering
+            \begin{tikzpicture}[scale=0.5]
+                \begin{axis}[axis lines=none]
+                    \addplot[domain=0.2:0.3,black] {1};
+                    \addplot[domain=0.3:0.7,black] {0.3*cos(deg((3.935)*(x-0.3)))+0.7};
+                    \addplot[domain=0.7:1,black] {x};
+                    \addplot[domain=0.01:0.010001,black] {0};
+                \end{axis}
+            \end{tikzpicture}
+        \end{figure}
+        \FloatBarrier
+        \vspace{-1.5cm}
+        All methods so far
+        \begin{align}
+            \frac{\norm{e_{k+1}}}{\norm{e_k}} \approx \rho \rightarrow 1 \qiq h \rightarrow 0
+        \end{align}
+        Can we find a method such that
+        \begin{align}
+            \rho < C < 1 \qiq h \rightarrow 0
+        \end{align}
+        .. an iteration to fixed tolerance independent of the mesh.
+        \begin{align}
+            \norm{e_{k+1}}{\norm{e_k}} \approx \rho \leftarrow \text{applies for large $k$}
+        \end{align}
+        What happens for small $k$?
+
+    \section{Analyze Jacobi in 1D}
+        \begin{align}
+            I_J = I + \frac{h^2}{2}A
+        \end{align}
+        where $A = \tridsym{-2}{1}{1}$.  Eigenvalues of $A$ are $\lambda_k = \dfrac{2}{h^2}\qty(\cos(k\pi h) - 1)$.  Eigenvalues of $I_J$ are $\mu_k = 1 + \dfrac{h^2}{2}\lambda_k = \cos(k\pi h)$.  If $k = 1,\dots,n$, with $h = \dfrac{1}{n+1}$, then $k\pi h = \pi h,\dots,\dfrac{n\pi}{n+1}$.  Set $\theta\coloneqq k\pi h$.
+        Plotting the specrum as a function of $\theta$ gives
+        \begin{figure}[ht!]
+            \centering
+            \begin{tikzpicture}[scale=0.5]
+                \begin{axis}[ylabel style={rotate=-90},xlabel={$\theta$},ylabel={$\mu_k$}]
+                    \addplot[domain=0:pi,black]{cos(deg(x))};
+                \end{axis}
+            \end{tikzpicture}
+        \end{figure}
+        \FloatBarrier
+        This shows low and high spacial frequencies are damped the least.  Try to improve convergence/smooting with a parameter..
+
+    \section{$\omega$-Jacobi}
+        \begin{align}
+            u_j^{k+1} = \frac{\omega}{2}\qty(u_{j-1}^k + u_{j+1}^k - h^2f_j) + (1 - \omega)u_j^k
+        \end{align}
+        What is the update matrix?
+        \begin{align}
+            T = \omega\qty(I + \frac{h^2}{2}{A}) + \qty(1 - \omega)I
+        \end{align}
+        with eigenvalues
+        \begin{align}
+            \mu_k^\omega = \omega\cos(k\pi h) + \qty(1 - \omega)
+        \end{align}
+        What happens to high and low frequencies?
+        \subsection{$k$ small?}
+            For small $k$, for example $k = 1$, $\mu_1^\omega = \omega\qty(1 - \dfrac{\pi h^2}{2} + \dots) + \qty(1 - \omega) = 1 - \dfrac{\omega\pi h^2}{2}$.
+            For large $k$, for example $k = n$, we have $\mu_n^\omega = 1 - 2\omega + \dots$.
+            \begin{figure}[ht!]
+                \centering
+                \begin{tikzpicture}[scale=0.5]
+                    \begin{axis}[ylabel style={rotate=-90},xlabel={$\theta$},ylabel={$\mu_n^k$},ymin=-1]
+                        \addplot[domain=0:pi,black]{0.8*cos(deg(x))+0.2};
+                    \end{axis}
+                \end{tikzpicture}
+            \end{figure}
+            \FloatBarrier
+            This is vertically compressed and shifted up.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
