@@ -1,0 +1,196 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{November 10, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{The Big Idea of Multigrid}
+        \begin{itemize}
+            \item Use smoothers like GS or $\omega$-Jacobi to get rid of high spacial frequency error.
+            \item Use a coarser mesh to eliminate lower frequency errors.
+        \end{itemize}
+
+    \section{Coarse Grid Correction}
+        We will subscripting everything with the gridspacing since there are multiple grids... let $u_h$ be the solution to $L_hu_h = f_h$ where $L_h$ is the discrete Laplacian operator of a grid of size $h$.  $u_h^k$ is the approximate solution after $k$ iterations.  Then $e_h^k \coloneqq u_h - u_h^k$ is the error in the approximation solution and $r_h^k \coloneqq f_h - L_hu_h^k$ is the residual.  Then $L_he_h^k = r_h^k$.  Rearranging the definition of the error gives us
+        \begin{align*}
+            u_h &= u_h^k + e_h^k \\
+            &= u_h^k + L_h^{-1}r_h^k
+        \end{align*}
+        This suggests how to generate an iterative scheme.  Lets approximate $L_h^{-1}$ to generate an iterative scheme. \\
+
+        For coarse-grid correction, use a coarse mesh to ``solve'' this equation.  Let $\Omega_h$ be the original mesh with grid size $h$.  This is $\Omega_h$ is the original fine mesh.  Then one way to define a coarser grid is by $\Omega_{2h}$, which is, in 1D, half the amount of grid points as $\Omega_h$.
+
+        Then let $G(\Omega_h)$ be the set of grid functions of $\Omega_h$.  We need ``transfer operators'' which maps elements between grids.
+        \begin{itemize}
+            \item A restriction operator (from fine mesh to coarse mesh)
+            \begin{align*}
+                \f{I_h^{2h}}{G(\Omega_h)}{G(\Omega_{2H})}
+            \end{align*}
+            \item An interpolation (or prolongation) operator (from coarse mesh to fine mesh)
+            \begin{align*}
+                \f{I_{2h}^h}{G(\Omega_{2h})}{G(\Omega_h)}
+            \end{align*}
+        \end{itemize}
+        We have $u_h^k$.  We must compute the fine grid residual
+        \begin{align*}
+            r_h^k = f_h - L_hu_h^k
+        \end{align*}
+        Then we restrict the residual
+        \begin{align*}
+            r_{2h}^k = I_h^{2h}r_h^k
+        \end{align*}
+        and solve for the error (however you solve doesn't really matter - it should be relatively cheap on a coarser mesh)
+        \begin{align*}
+            e_{2h}^k = L_{2h}^{-1}r_{2h}^k
+        \end{align*}
+        Then interpolate the coarse grid error $e_{2h}^k$ back on to the fine mesh
+        \begin{align*}
+            \tilde{e}_h^k = I_{2h}^he_{2h}^k
+        \end{align*}
+        Then correct the approximate solution
+        \begin{align*}
+            u_h^{k+1} = u_h^k + \tilde{e}_h^k
+        \end{align*}
+
+        How is $\tilde{e}_h^k$ defined?
+        \begin{align*}
+            u_h^{k+1} &= u_h^k + \tilde{e}_h^k \\
+            &= u_h^k + I_{2h}^ke_{2h}^k \\
+            &= u_h^k + I_{2h}^kL_{2h}^{-1}r_{2h}^k \\
+            &= u_h^k + I_{2h}^kL_{2h}^{-1}I_h^{2h}r_h^k \\
+            &= u_h^k + I_{2h}^kL_{2h}^{-1}I_h^{2h}\qty(f_h - L_hu_h^k)
+        \end{align*}
+        whew!
+        \begin{align*}
+            u_h^{k+1} &= (I - \underbrace{I_{2h}^hL_{2h}^{-1}I_h^{2h}}_{\text{coarse-grid inv.}}L_h)u_h^k + I_{2h}^hL_{2h}^{-1}I_h^{2h}f_h \\
+            &= Ku_h^k + C
+        \end{align*}
+        where $K$ is the ``coarse grid operator'' and $C$ is the constant.  This iteration does \emph{NOT} converge since we cannot represent the high-frequency errors.  In fact, the high-frequency errors are added to the low-frequency errors.  So we MUST perform smoothing first in order for this converge.  This will get rid of the high-frequency errors.
+
+    \section{Smoothing}
+
+        Let $S$ denote the smoothing operator.  Two-grid iteration:
+        \begin{enumerate}
+            \item Pre-smoothing: smooth $\nu_1$ times.
+            \item Apply coarse-grid correction.
+            \begin{itemize}
+                \item Compute residual
+                \item Restrict residual
+                \item Solve for coarse grid error (*** this is what turns 2-grid into multigrid)
+                \item Interpolate the error
+                \item Correct (add the error back in)
+            \end{itemize}
+            \item Post-smooth
+            \begin{itemize}
+                \item Smooth $\nu_2$ times.
+            \end{itemize}
+        \end{enumerate}
+        So,
+        \begin{align*}
+            M = S^{\nu_2}(I - I_{2h}^hL_{2h}^{-1}I_h^{2h})S^{\nu_1}
+        \end{align*}
+
+    \section{Questions?}
+        \begin{itemize}
+            \item How do we pick $\nu_i$?
+            \item What are the transfer operators?
+            \item What is $L_{2h}$?
+            \item Which smoothing operator?
+            \item How efficient is 2-grid?
+            \begin{itemize}
+                \item Turns out it gives $\order{N\log(N)}$ work (near optimal)
+            \end{itemize}
+        \end{itemize}
+
+    \section{Transfer Operators}
+        \subsection{Restriction}
+            \begin{itemize}
+                \item The simplest operator is to just throw out half the points.  This is called \textbf{Injection}.  So, just set the $j$th point of the coarse grid equal to the $2j$th point of the fine mesh.
+                \begin{align}
+                    (u_{2h})_j = (u_h)_{2j}
+                \end{align}
+                \item Another common operator is called full-weighting (adjoint of the linear interpolation operator).  Grab a local average of the points above.
+                \begin{align}
+                    (u_{2h})_j = \frac{1}{4}\big[(u_h)_{2j-1} + 2(u_h)_{2j} + (u_h)_{2j+1}\big]
+                \end{align}
+                Stencil for full-weighting is, in 1D,
+                \begin{align}
+                    I_h^{2h} = \frac{1}{4}\qty[\begin{array}{ccc}
+                        1 & 4 & 1
+                    \end{array}]
+                \end{align}
+                Stencil for full-weighting is, in 2D,
+                \begin{align}
+                    I_h^{2h} = \frac{1}{16}\qty[\begin{array}{ccc}
+                        1 & 2 & 1 \\
+                        2 & 4 & 2 \\
+                        1 & 2 & 1
+                    \end{array}]
+                \end{align}
+            \end{itemize}
+            
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
