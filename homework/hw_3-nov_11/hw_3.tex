@@ -1,0 +1,230 @@
+\documentclass{article} % A4 paper and 11pt font size
+\setcounter{secnumdepth}{0}
+
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{moreverb}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{caption}
+\usepackage{nicefrac}
+\usepackage{graphics}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\usepackage{array}
+\usepackage{arydshln}
+\usepackage{float}
+\usepackage{csquotes}
+\usepackage{placeins}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage[makeroom]{cancel}
+\usepackage{bbold}
+\usepackage{scrextend}
+\usepackage{alltt}
+\usepackage{listings}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage[normalem]{ulem}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usepackage{pgfplots}
+\usepackage{bigints}
+\allowdisplaybreaks
+\pgfplotsset{compat=1.12}
+
+\theoremstyle{plain}
+\newtheorem*{theorem*}{Theorem}
+\newtheorem{theorem}{Theorem}
+\newtheorem*{lemma*}{Lemma}
+\newtheorem{lemma}{Lemma}
+
+\definecolor{verbgray}{gray}{0.9}
+% \definecolor{dkgreen}{green}{0.9}
+
+\lstnewenvironment{code}{%
+  \lstset{
+  language=Python,
+  backgroundcolor=\color{verbgray},
+  keywordstyle=\color{blue},      % keyword style
+  keywordstyle=[2]\color{blue},   % keyword style
+  commentstyle=\color{magenta},   % comment style
+  stringstyle=\color{olive},      % string literal styleframe=single,
+  numberstyle=\color{black},      % string literal styleframe=single,
+  framerule=0pt,
+  numbers=left,
+  stepnumber=1,
+  firstnumber=1,
+  showspaces=false,
+  basicstyle=\ttfamily}}{}
+
+\lstnewenvironment{console_output}{%
+  \lstset{
+  framerule=0pt,
+  numbers=left,
+  stepnumber=1,
+  showspaces=false,
+  firstnumber=1,
+  basicstyle=\ttfamily}}{}
+
+
+\makeatletter
+\newcommand{\BIGG}{\bBigg@{3}}
+\newcommand{\vast}{\bBigg@{4}}
+\newcommand{\Vast}{\bBigg@{5}}
+\makeatother
+
+\newenvironment{definition}[1][Definition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+\newcommand{\dy}{\partial_y}
+\newcommand{\dyy}{\partial_{yy}}
+\newcommand{\dxx}{\partial_{xx}}
+\newcommand{\dxy}{\partial_{xy}}
+\newcommand{\dyyy}{\partial_{yyy}}
+\newcommand{\dxxx}{\partial_{xxx}}
+\newcommand{\dx}{\partial_x}
+\newcommand{\E}{\varepsilon}
+\def\Rl{\mathbb{R}}
+\def\Cx{\mathbb{C}}
+
+\newcommand{\Ei}{\text{Ei}}
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
+\usepackage[english]{babel} % English language/hyphenation
+
+\usepackage{sectsty} % Allows customizing section commands
+\allsectionsfont{\centering \normalfont\scshape} % Make all sections centered, the default font and small caps
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancy} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead[L]{\bf Sam Fleischer}
+\fancyhead[C]{\bf UC Davis \\ Numerical Solutions of Differential Equations (MAT228A)} % No page header - if you want one, create it in the same way as the footers below
+\fancyhead[R]{\bf Fall 2016}
+
+\fancyfoot[L]{\bf } % Empty left footer
+\fancyfoot[C]{\bf \thepage} % Empty center footer
+\fancyfoot[R]{\bf } % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{25pt} % Customize the height of the header
+
+\newcommand{\VEC}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\ran}{\text{\rm ran }}
+\newcommand{\Hilb}{\mathcal{H}}
+\newcommand{\lap}{\Delta}
+
+\newcommand{\littleo}[1]{\text{\scriptsize$\mathcal{O}$}\qty(#1)}
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\newcommand{\problem}[2]{
+\vspace{.375cm}
+\boxed{\begin{minipage}{\textwidth}
+    \section{\bf #1}
+    #2
+\end{minipage}}
+}
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+
+\title{ 
+\normalfont \normalsize 
+\textsc{UC Davis, Numerical Solutions of Differential Equations (MAT 228A), Fall 2016} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{2pt} \\[0.4cm] % Thin top horizontal rule
+\Huge Homework \#3 \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{\huge Sam Fleischer} % Your name
+
+\date{November 11, 2016} % Today's date or a custom date
+
+\begin{document}\thispagestyle{empty}
+
+\maketitle % Print the title
+
+\makeatletter
+\@starttoc{toc}
+\makeatother
+
+\pagebreak
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\problem{Problem 1}{Use Jacobi, Gauss-Seidel, and SOR (with optimal $\omega$) to solve
+\begin{align}
+    \laplacian u = -\exp(-(x - 0.25)^2 - (y - 0.6)^2)
+\end{align}
+on the unit square $(0,1)\times(0,1)$ with homogeneous Dirichlet boundary conditions.  Find the solution for mesh spacings of $h = 2^{-5}$, $2^{-6}$, and $2^{-7}$.  What tolerance did you use?  What stopping criteria did you use?  What value of $\omega$ did you use?  Report the number of iterations it took to reach convergence for each method for each mesh.
+}
+
+
+
+
+
+
+
+
+
+\problem{Problem 2}{When solving parabolic equations numerically, one frequently needs to solve an equation of the form $$u - \delta\laplacian u = f,$$ where $\delta > 0$.  The analysis and numerical methods we have discussed for the Poisson equation can be applied to the above equation.  Suppose we are solving the above equation on the unit square with Dirichlet boundary conditions.  Use the standard five point stencil for the discrete Laplacian.
+\begin{enumerate}[\ \ (a)]
+    \item Analytically compute the eigenvalues of the Jacobi iteration matrix, and show that the Jacobi iteration converges.
+    \item If $h = 10^{-2}$ and $\delta = 10^{-4}$, how many iterations of SOR would it take reduce the error by a factor of $10^{-6}$?  How many iterations would it take for the Poisson equation?  Use that the spectral radius of SOR is $$\rho_\text{SOR} = \omega_\text{opt} - 1,$$ where $$\omega_\text{opt} = \frac{2}{1 + \sqrt{1 - \rho_J^2}},$$ and where $\rho_J$ is the spectral radius of Jacobi.
+\end{enumerate}
+}
+
+
+
+
+
+
+
+
+
+
+
+\problem{Problem 3}{IN this problem we compare the speed of SOR to a direct solve using Gaussian elimination.  At the end of this assignment is MATLAB code to form the matrix for the 2D discrete Laplacian.  The code for the 3D matrix is similar.  Note that with 1 GB of memory, you can handle grids up to about $1000\times1000$ in 2D and $40\times40\times40$ in 3D with a direct solve.  The range of grids you will explore depends on the amount of memoery you have.
+\begin{enumerate}[\ \ (a)]
+    \item Solve the PDE from problem 1 using a direct solve.  Put timing commands in your code and report the time to solve for a range of mesh spacings.  Use SOR to solve on the same meshes and report the time and number of iterations.  Comment on your results.  Note that the timing results depend strongly on your implementation.  Comment on the efficiency of your program.
+    \item Repeat the previous part in three spatial dimensions for a range of mesh spacings.  Change the right side of the equation to be a three dimensional Gaussian.  Comment on your results.
+\end{enumerate}
+}
+
+
+
+
+
+
+
+
+
+
+
+\problem{Problem 4}{Periodic boundary conditions for the on dimensional Poisson equation on $(0,1)$ are $u(0) = u(1)$ and $u_x(0) = u_x(1)$.  These boundary conditions are eqsy to discretize, but lead to a singular system to solve.  For example, using the standard discretization, $x_j = jh$ where $h = \nicefrac{1}{N+1}$, the discrete Laplacian at $x_0$ is $h^2\qty(u_N - 2u_0 + u_1)$.
+\begin{enumerate}[\ \ (a)]
+    \item Write the discrete Laplacian for periodic boundary conditions in one dimension as a matrix.  Show that this matrix is singular, and find the vectors that span the null space.  (Note that this matrix is symmetric, and so you have found the null space of the adjoint).
+    \item What is the discrete solvability condition for the discretized Poisson equation with periodic boundary conditions in one dimension?  What is the discrete solvability condition in two dimensions?
+    \item Show that $v$ is in the null space of the matrix $A$ if and only if $v$ is an eigenvector of the iteration matrix $T = M^{-1}N$ with eigenvalue $1$, where $A = M - N$.  The iteration will converge if the discrete solvability condition is satisfied provided the other eigenvalues are less than $1$ in magnitude (true for Gauss-Seidel and SOR, but not for Jacobi).
+\end{enumerate}
+}
+\end{document}
+
+
+
+
+
+
+
+
+
