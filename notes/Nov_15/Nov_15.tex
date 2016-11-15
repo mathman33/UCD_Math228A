@@ -1,0 +1,212 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{November 15, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Multigrid}
+
+        \subsection{Transfer Operators}
+
+            \subsubsection{Restriction Operator}
+
+                A map from a grid of spacing $h$ to a grid of spacing $2h$.  Injection (throwing out in-between points) is not good - we shouldn't throw away information.  Instead, take a weighted average of the three points ``above'' you.. here are the stensils:
+                \begin{align*}
+                    I_h^{2h} = \frac{1}{4}\qty[\begin{array}{ccc}1 & 2 & 1\end{array}]
+                \end{align*}
+                In 2D,
+                \begin{align*}
+                    I_h^{2h} = \frac{1}{16}\qty[\begin{array}{ccc}1 & 2 & 1 \\ 2 & 4 & 2 \\ 1 & 2 & 1\end{array}]
+                \end{align*}
+
+                Pseudocode for 1D:
+                \begin{itemize}
+                    \item Loop over coarse mesh $j_c$
+                    \begin{itemize}
+                        \item Compute corresponding fine grid point $j_f$.
+                        \item Compute $u_c(j_c) = \dfrac{1}{4}\qty(u_f(j_f-1) + 2u_f(j_f) + u_f(j_f+1))$.
+                    \end{itemize}
+                \end{itemize}
+
+                Another stensil in 2D is
+                \begin{align*}
+                    I_h^{2h} = \frac{1}{8}\qty[\begin{array}{ccc}
+                        0 & 1 & 0 \\ 1 & 4 & 1 \\ 0 & 1 & 0
+                    \end{array}]
+                \end{align*}
+                It is less desirable but cheaper.
+
+            \subsubsection{Interpolation (Prolongation) Operator}
+                In 1D, we could copy the data such that $(u_h)_{2j_c} = (u_{2h})_{j_c}$ and interpolate for the points in-between: $(u_h)_{2j_c-1} = \dfrac{1}{2}\qty((u_{2h})_{j_c-1} + (u_{2h})_{j_c})$.  Here is the stensil:
+                \begin{align*}
+                    I_{2h}^h = \frac{1}{2}\left]\begin{array}{ccc} 1 & 2 & 1 \end{array}\right[
+                \end{align*}
+                In 2D,
+                \begin{align*}
+                    I_{2h}^h = \frac{1}{4}\left]\begin{array}{ccc} 1 & 2 & 1 \\ 2 & 4 & 2 \\ 1 & 2 & 1\end{array}\right[
+                \end{align*}
+                where the backwards brackets signify a function from the coarse grid to the fine grid, rather than from the fine grid to the coarse grid.  Pseudocode for 1D linear interpolation:
+                \begin{itemize}
+                    \item $u_f = 0$
+                    \item loop of coarse mesh $j_c$
+                    \begin{itemize}
+                        \item[*] compute $j_f$
+                        \item[*] $u_f(j_f - 1) = u_f(j_f - 1) + \dfrac{1}{2}u_c(j_c)$
+                        \item[*] $u_f(j_f) = u_c(j_c)$
+                        \item[*] $u_f(j_f + 1) = u_f(j_f + 1) + \dfrac{1}{2}u_c(j_c)$
+                    \end{itemize}
+                \end{itemize}
+
+            \subsubsection{1D example: 9 pt.~fine mesh, 5 pt.~coarse mesh}
+                Fine mesh spacing is $\nicefrac{1}{8}$, coarse mesh spacing is $\nicefrac{1}{4}$.  So for Dirichlet problem, $n_f = 7$, $n_c = 3$.  Here is the matrix for full weighting.  It is a $3\times7$ matrix since it is mapping grid-size $h$ to grid-size $2h$.
+                \begin{align*}
+                    I_h^{2h} = \frac{1}{4}\qty[\begin{array}{ccccccc}
+                        1 & 2 & 1 & 0 & 0 & 0 & 0 \\
+                        0 & 0 & 1 & 2 & 1 & 0 & 0 \\
+                        0 & 0 & 0 & 0 & 1 & 2 & 1
+                    \end{array}]
+                \end{align*}
+                The interpolation operator is a $7\times3$ matrix
+                \begin{align*}
+                    I_{2h}^h = \frac{1}{2}\qty[\begin{array}{ccc}
+                        1 & 0 & 0 \\
+                        2 & 0 & 0 \\
+                        1 & 1 & 0 \\
+                        0 & 2 & 0 \\
+                        0 & 1 & 1 \\
+                        0 & 0 & 2 \\
+                        0 & 0 & 1
+                    \end{array}]
+                \end{align*}
+                So $I_h^{2h} = \dfrac{1}{2}\qty(I_{2h}^h)^T$.  Choose the weighted inner product:
+                \begin{align*}
+                    \langle u,v\rangle_h \coloneqq h u^T v
+                \end{align*}
+                So,
+                \begin{align*}
+                    \langle u_h, I_{2h}^hv_{2h}\rangle_h &= hu_h^TI_{2h}^hv_{2h} \\ 
+                    &= h \qty(\qty(I_{2h}^h)^Tu_h)^Tv_{2h} \\
+                    &= h \qty(2I_h^{2h}u_h)^Tv_{2h} \\
+                    &= 2h \qty(I_h^{2h}u_h)^T v_{2h} \\
+                    &= \langle I_h^{2h}u_h, v_{2h} \rangle_{2h}
+                \end{align*}
+                So these two operators are each others' adjoints, when considering the proper inner product.  Review of the definition of adjoint: $A^*$ of $A$:
+                \begin{align*}
+                    \langle x, Ay \rangle = \langle A^*x, y \rangle
+                \end{align*}
+
+        \subsection{Solving on the coarse grid}
+            \begin{align*}
+                 \dots \rightarrow \underbrace{\text{smooth} \rightarrow \text{residual}}_\text{fine mesh} \rightarrow \text{residual} \underbrace{\rightarrow \text{solve} \rightarrow}_\text{coarse mesh} \text{interpolate} \rightarrow \underbrace{\text{correct} \rightarrow \text{smooth}}_\text{fine mesh} \rightarrow \dots
+            \end{align*}
+            Solving requires
+            \begin{align*}
+                L_{2h}e_{2h} = f_{2h}
+            \end{align*}
+            What is $L_{2h}$?  One way to define $L_{2h}$ is
+            \begin{align*}
+                L_{2h}I_h^{2h}L_hI_{2h}^h
+            \end{align*}
+            This is called the Galerkin coarse grid operator.  What does this look like?  Here is the stensil.. if $L_h$ is
+            \begin{align*}
+                L_h = \frac{1}{h^2}\qty[\begin{array}{ccc} 0 & 1 & 0 \\ 1 & -4 & 1 \\ 0 & 1 & 0\end{array}]
+            \end{align*}
+            then
+            \begin{align*}
+                L_{2h} = \frac{1}{(2h)^2}\qty[\begin{array}{ccc}1 & 2 & 1 \\ 2 & -12 & 2 \\ 1 & 2 & 1\end{array}]
+            \end{align*}
+            The problem with this is that $L_{4h}$ is different, etc.~so we get a series of operators for multigrid.  A \emph{much} simpler approach is to re-discretize the problem at each level, and just use the discrete Laplacian at that level:
+            \begin{align*}
+                L_{2h} = \frac{1}{(2h)^2}\qty[\begin{array}{ccc}0 & 1 & 0 \\ 1 & -4 & 1 \\ 0 & 1 & 0\end{array}]
+            \end{align*}
+            This is geometric multigrid, whereas the former is algebraic multigrid.  AMG is much more general, but is slower than GMG.  GMG is useful since we know this is coming from a PDE.
+
+        \subsection{How well does this work?}
+            Let $\nu_1$ be the number of presmooth steps and $\nu_2$ the number of postsmooth stpes.  Then define $\nu = \nu_1 + \nu_2$.  The spectral radius of the two-grid, 2D model problem with full-weighting, bilinear interpolation, rediscretization.
+            \begin{align*}
+                \text{Spectral radius}\qquad\ \\
+                \begin{array}{||l|l|l||}\hline\hline
+                    \nu & \text{$\omega$-Jacobi} & \text{GS-RB} \\\hline\hline
+                    1 & 0.6 & 0.25 \\\hline
+                    2 & 0.360 & 0.074 \\\hline
+                    3 & 0.216 & 0.053 \\\hline
+                    4 & 0.137 & 0.041 \\\hline\hline
+                \end{array}
+            \end{align*}
+            So we have mesh-independent convergence.  We see $\rho < C < 1$, i.e.~the spectral radius is bounded away from $1$.  So
+            \begin{align*}
+                \rho^k  &= \E \\
+                k &= \frac{\ln\E}{\ln\rho}
+            \end{align*}
+
+            We will discuss computational expense when we talk about \emph{multi}grid later.
+
+            How much smoothing should we do?  More smoothing is better, but there are diminishing returns the more smoothing we do.  We need to balance the smoothing work with iteration work.  Suppose the work per iteration is $\nu + w$, where $\nu$ is the smoothing work and $w$ is everything else.  So work per digit of accuracy is
+            \begin{align*}
+                \frac{\nu + w}{-\log_{10}(\rho)} = \text{(work)(\# iterations per digit)}
+            \end{align*}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
