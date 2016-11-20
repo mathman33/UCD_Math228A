@@ -1,0 +1,207 @@
+\documentclass{article} % A4 paper and 11pt font size
+\setcounter{secnumdepth}{0}
+
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{moreverb}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{caption}
+\usepackage{nicefrac}
+\usepackage{graphics}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\usepackage{array}
+\usepackage{arydshln}
+\usepackage{float}
+\usepackage{csquotes}
+\usepackage{placeins}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage[makeroom]{cancel}
+\usepackage{bbold}
+\usepackage{scrextend}
+\usepackage{alltt}
+\usepackage{listings}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage[normalem]{ulem}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usepackage{pgfplots}
+\usepackage{bigints}
+\allowdisplaybreaks
+\pgfplotsset{compat=1.12}
+
+\theoremstyle{plain}
+\newtheorem*{theorem*}{Theorem}
+\newtheorem{theorem}{Theorem}
+\newtheorem*{lemma*}{Lemma}
+\newtheorem{lemma}{Lemma}
+
+\definecolor{verbgray}{gray}{0.9}
+% \definecolor{dkgreen}{green}{0.9}
+
+\lstnewenvironment{code}{%
+  \lstset{
+  language=Python,
+  backgroundcolor=\color{verbgray},
+  keywordstyle=\color{blue},      % keyword style
+  keywordstyle=[2]\color{blue},   % keyword style
+  commentstyle=\color{magenta},   % comment style
+  stringstyle=\color{olive},      % string literal styleframe=single,
+  numberstyle=\color{black},      % string literal styleframe=single,
+  framerule=0pt,
+  numbers=left,
+  stepnumber=1,
+  firstnumber=1,
+  showspaces=false,
+  basicstyle=\ttfamily}}{}
+
+\lstnewenvironment{console_output}{%
+  \lstset{
+  framerule=0pt,
+  numbers=left,
+  stepnumber=1,
+  showspaces=false,
+  firstnumber=1,
+  basicstyle=\ttfamily}}{}
+
+
+\makeatletter
+\newcommand{\BIGG}{\bBigg@{3}}
+\newcommand{\vast}{\bBigg@{4}}
+\newcommand{\Vast}{\bBigg@{5}}
+\makeatother
+
+\newenvironment{definition}[1][Definition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+\newcommand{\dy}{\partial_y}
+\newcommand{\dyy}{\partial_{yy}}
+\newcommand{\dxx}{\partial_{xx}}
+\newcommand{\dxy}{\partial_{xy}}
+\newcommand{\dyyy}{\partial_{yyy}}
+\newcommand{\dxxx}{\partial_{xxx}}
+\newcommand{\dx}{\partial_x}
+\newcommand{\E}{\varepsilon}
+\def\Rl{\mathbb{R}}
+\def\Cx{\mathbb{C}}
+
+\newcommand{\Ei}{\text{Ei}}
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
+\usepackage[english]{babel} % English language/hyphenation
+
+\usepackage{sectsty} % Allows customizing section commands
+\allsectionsfont{\centering \normalfont\scshape} % Make all sections centered, the default font and small caps
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancy} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead[L]{\bf Sam Fleischer}
+\fancyhead[C]{\bf UC Davis \\ Numerical Solutions of Differential Equations (MAT228A)} % No page header - if you want one, create it in the same way as the footers below
+\fancyhead[R]{\bf Fall 2016}
+
+\fancyfoot[L]{\bf } % Empty left footer
+\fancyfoot[C]{\bf \thepage} % Empty center footer
+\fancyfoot[R]{\bf } % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{25pt} % Customize the height of the header
+
+\newcommand{\VEC}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\ran}{\text{\rm ran }}
+\newcommand{\Hilb}{\mathcal{H}}
+\newcommand{\lap}{\Delta}
+
+\newcommand{\littleo}[1]{\text{\scriptsize$\mathcal{O}$}\qty(#1)}
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\newcommand{\problem}[2]{
+\vspace{.375cm}
+\boxed{\begin{minipage}{\textwidth}
+    \section{\bf #1}
+    #2
+\end{minipage}}
+}
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+
+\title{ 
+\normalfont \normalsize 
+\textsc{UC Davis, Numerical Solutions of Differential Equations (MAT 228A), Fall 2016} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{2pt} \\[0.4cm] % Thin top horizontal rule
+\Huge Homework \#4 \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{\huge Sam Fleischer} % Your name
+
+\date{December 2, 2016} % Today's date or a custom date
+
+\begin{document}\thispagestyle{empty}
+
+\maketitle % Print the title
+
+\makeatletter
+\@starttoc{toc}
+\makeatother
+
+\pagebreak
+
+\problem{Part I}{White a multigrid V-cycle code to solve the Poisson equation in two dimensions on the unit square with Dirichlet boundary conditions.  Use full weighting for restriction, bilinear interpolation for prolongation, and red-black Gauss-Seidel for smoothing. \\
+
+\textbf{Note:} If you cannot get a V-cycle code working, write a simple code such as a 2-grid code.  You can also experiment in one dimension (do not use GSRB in 1D).  You may turn in one of these simplified coeds for reduced credit.  You should state what your code does, and use your code for the assignment. \\
+
+\begin{enumerate}[\ \ 1.]
+    \item Use your V-cycle code to solve $$\laplacian u = -\exp[-\qty(x - 0.25)^2 - (y - 0.6)^2]$$ on the unit square $(0,1)\times(0,1)$ with homogeneous Dirichlet boundary conditions for different grid spaces.  How many steps of pre and postsmoothing did you use?  What tolerance did you use?  How many cycles did it take to converge?  Compare the amount of work needed to reach convergence with your solvers from Homework 3 taking into account how much work is involved in a V-cycle.
+\end{enumerate}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\problem{Part II}{Choose \textbf{one} of the following problems.
+\begin{enumerate}[\ \ 1.]
+    \item Numerically estimate the average convergence factor, $$\qty(\frac{\norm{e^{(k)}}_\infty}{\norm{e^{(0)}}_\infty})^{\nicefrac{1}{k}},$$ for different numbers of presmoothing steps, $\nu_1$, and postsmoothing steps, $\nu_2$, for $\nu = \nu_1 + \nu_2 \leq 4$.  Be sure to use a small value of $k$ because convergence may be reached very quickly.  What test problem did you use?  Do your results depend on the grid spacing?  Report the results in a table, and discuss which choices of $\nu_1$ and $\nu_2$ give the most efficient solver.
+    \item The multigrid V-cycle iteration is of the form $$u^{k+1} = (I - BA)u^k + Bf,$$ where $M = I - BA$ is the multigrid iteration matrix.  To compute the $k$th column of the multigrid iteration matrix, apply a single V-cycle to a problem with zero right-hand-side, $f$, and as an initial guess, $u^0$, that has a $1$ in the $k$th entry and zeros everywhere else.  For a small problem, e.g.~$h = 2^{-5}$ or $h = 2^{-6}$, form the multigrid matrix, compute the eigenvalues, and plot them in the complex plane.  Compute the spectral radius and $2$-norm of the multigrid iteration matrix for different numbers of presmoothing steps $\nu_1$, and postsmoothing steps, $\nu_2$.  Comment on your results.
+\end{enumerate}
+}
+
+
+
+
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
