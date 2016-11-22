@@ -1,5 +1,8 @@
 from __future__ import division
 
+import scipy.sparse
+import scipy.sparse.linalg
+from copy import deepcopy
 import numpy as np
 from math import log
 from mpl_toolkits.mplot3d import Axes3D
@@ -10,68 +13,42 @@ import gc as garbage
 def RHS(X,Y):
     return -np.exp(-(X - 0.25)**2 - (Y - 0.6)**2)
 
-def Dirichlet(u):
-    I = u.shape[0]
-    J = u.shape[1]
-    for i in xrange(I):
-        u[i][0] = 0
-        u[i][J-1] = 0
-    for j in xrange(J):
-        u[0][j] = 0
-        u[I-1][j] = 0
-    return u
-
-def smooth(u):
-    pass
+def max_norm(a):
+    return np.amax(np.abs(a))
 
 def restriction(u):
-    power = int(log(u.shape[0]-1,2))-1
-    coarse_grid = 2**power+1
+    power = int(log(u.shape[0]+1,2))-1
+    coarse_grid = 2**power-1
     v = np.zeros((coarse_grid,coarse_grid))
-    # Don't include edges since we are assuming Dirichlet boundary conditions.
-    for i in xrange(1,coarse_grid-1):
-        for j in xrange(1,coarse_grid-1):
-            row_1 = u[(2*i)-1][(2*j)-1] + 2*u[(2*i)-1][(2*j)] + u[(2*i)-1][(2*j)+1]
-            row_2 = 2*(u[(2*i)][(2*j)-1] + 2*u[(2*i)][(2*j)] + u[(2*i)][(2*j)+1])
-            row_3 = u[(2*i)+1][(2*j)-1] + 2*u[(2*i)+1][(2*j)] + u[(2*i)+1][(2*j)+1]
+    for i in xrange(0,coarse_grid):
+        for j in xrange(0,coarse_grid):
+            row_1 = u.item(((2*i),(2*j))) + 2*u.item(((2*i),(2*j)+1)) + u.item(((2*i),(2*j)+2))
+            row_2 = 2*(u.item(((2*i)+1,(2*j))) + 2*u.item(((2*i)+1,(2*j)+1)) + u.item(((2*i)+1,(2*j)+2)))
+            row_3 = u.item(((2*i)+2,(2*j))) + 2*u.item(((2*i)+2,(2*j)+1)) + u.item(((2*i)+2,(2*j)+2))
             v[i][j] = (1/16)*(row_1 + row_2 + row_3)
     return v
 
-def interpolation(v):
-    power = int(log(v.shape[0]-1,2))
-    coarse_grid = 2**power+1
-    power += 1
-    fine_grid = 2**power+1
+def interpolation(v,power):
+    coarse_grid = 2**(power-1)-1
+    fine_grid = 2**power-1
     u = np.zeros((fine_grid,fine_grid))
     for i in xrange(coarse_grid):
         for j in xrange(coarse_grid):
             # Top row
-            if i > 0:
-                if j > 0:
-                    u[(2*i)-1][(2*j)-1] += (1/4)*v[i][j]
-                u[(2*i)-1][(2*j)] += (1/2)*v[i][j]
-                if j < coarse_grid-1:
-                    u[(2*i)-1][(2*j)+1] += (1/4)*v[i][j]
+            u[(2*i)][(2*j)] += (1/4)*v[i][j]
+            u[(2*i)][(2*j)+1] += (1/2)*v[i][j]
+            u[(2*i)][(2*j)+2] += (1/4)*v[i][j]
+
             # Middle row
-            if j > 0:
-                u[(2*i)][(2*j)-1] += (1/2)*v[i][j]
-            u[(2*i)][(2*j)] += v[i][j]
-            if j < coarse_grid-1:
-                u[(2*i)][(2*j)+1] += (1/2)*v[i][j]
+            u[(2*i)+1][(2*j)] += (1/2)*v[i][j]
+            u[(2*i)+1][(2*j)+1] += v[i][j]
+            u[(2*i)+1][(2*j)+2] += (1/2)*v[i][j]
+
             # Bottom row
-            if i < coarse_grid-1:
-                if j > 0:
-                    u[(2*i)+1][(2*j)-1] += (1/4)*v[i][j]
-                u[(2*i)+1][(2*j)] += (1/2)*v[i][j]
-                if j < coarse_grid-1:
-                    u[(2*i)+1][(2*j)+1] += (1/4)*v[i][j]
+            u[(2*i)+2][(2*j)] += (1/4)*v[i][j]
+            u[(2*i)+2][(2*j)+1] += (1/2)*v[i][j]
+            u[(2*i)+2][(2*j)+2] += (1/4)*v[i][j]
     return u
-
-def correction(u):
-    pass
-
-def solve(u):
-    pass
 
 def get_red_blue(u):
     red = []
@@ -84,44 +61,110 @@ def get_checkerboard_of_size(u):
     t = np.row_stack(t)
     return t
 
-def GSRB(u,rhs,h):
+def GSRB(u,rhs,N,h):
     checkerboard = get_checkerboard_of_size(u)
     red_indicies = np.where(checkerboard == 1)
     blue_indicies = np.where(checkerboard == 0)
     red_indicies = zip(red_indicies[0],red_indicies[1])
     blue_indicies = zip(blue_indicies[0],blue_indicies[1])
-    for (i,j) in red_indicies:
-        if i != 0 and i != h-1 and j != 0 and j != h-1:
-            u[i][j] = (1/4)*(u[i-1][j] + u[i][j-1] + u[i+1][j] + u[i][j+1] - h**2*rhs[i][j])
-    for (i,j) in blue_indicies:
-        if i != 0 and i != h-1 and j != 0 and j != h-1:
-            u[i][j] = (1/4)*(u[i-1][j] + u[i][j-1] + u[i+1][j] + u[i][j+1] - h**2*rhs[i][j])
+    for indices in [red_indicies, blue_indicies]:
+        for (i,j) in indices:
+            if i == 0:
+                first = 0
+            else:
+                first = u[i-1][j]
+            if j == 0:
+                second = 0
+            else:
+                second = u[i][j-1]
+            if i == N-3:
+                third = 0
+            else:
+                third = u[i+1][j]
+            if j == N-3:
+                fourth = 0
+            else:
+                fourth = u[i][j+1]
+            u[i][j] = (1/4)*(first + second + third + fourth - (h**2)*rhs[i][j])
     return u
 
 
-def get_mesh(power):
-    nx = 2**power+1
-    ny = 2**power+1
-    x = np.linspace(0,1,nx)
-    y = np.linspace(0,1,ny)
-    X,Y = np.meshgrid(x,y)
-    return X,Y,nx
-
-def main():
-    power = 6
-    X,Y,h = get_mesh(power)
-    f = RHS(X,Y)
-    u = RHS(X,Y)
-    u = Dirichlet(u)
-    for k in xrange(30):
-        u = GSRB(u,f,h)
+def pls_plot(X,Y,Z):
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot_surface(X,Y,u,rstride=1,cstride=1)
-    ax.set_xlabel("X Label")
+    ax = fig.add_subplot(111, projection="3d")
+    ax.plot_surface(X,Y,Z,rstride=1,cstride=1)
     plt.show()
     plt.close()
     garbage.collect()
+
+def get_mesh(power):
+    N = 2**power+1
+    x,h = np.linspace(0,1,N,retstep=True)
+    x = x[1:len(x)-1:]
+    X,Y = np.meshgrid(x,x)
+    return X,Y,N,h
+
+def disc_lapl(N,h):
+    off_diag = 1/(h**2)*np.ones(N**2)
+    diag = -4/(h**2)*np.ones(N**2)
+    A = np.vstack((off_diag,off_diag,diag,off_diag,off_diag))
+    A = scipy.sparse.dia_matrix((A,[-N,-1,0,1,N]),shape=(N**2,N**2))
+    A = scipy.sparse.csr_matrix(A)
+    return A
+
+def trivial_direct_solve(h,r):
+    return np.asarray((-(h**2)/4)*r.item((0,0))).reshape((1,1))
+
+def V_cycle(power,u,f):
+    X,Y,N,h = get_mesh(power)
+
+    # Smooth
+    u = GSRB(u,f,N,h)
+    u = u.transpose()
+
+    # Compute Residual
+    L = disc_lapl(N-2,h)
+    r = (f.transpose().flatten() - L.dot(u.flatten())).reshape((int(2**power - 1),int(2**power - 1)))
+
+    # Restrict
+    r = restriction(r)
+
+    # Solve
+    if power == 2:
+        e = trivial_direct_solve(h,r)
+    else:
+        e_guess = np.zeros((2**(power-1) - 1, 2**(power-1) - 1))
+        e = V_cycle(power-1,e_guess,r)
+
+    # Interpolate the error
+    e = interpolation(e,power)
+
+    # Correct the solution
+    u = u + e
+
+    # Smooth
+    u = GSRB(u,f,N,h)
+    u = u.transpose()
+
+    return u
+
+
+def main():
+    tolerance = 10**-3
+    power = 2
+    u = np.zeros((2**power - 1,2**power - 1))
+    X,Y,N,h = get_mesh(power)
+    while True:
+        u_new = V_cycle(power, u, RHS(X,Y))
+        E = u_new-u
+        print max_norm(E)/max_norm(u)
+        u = deepcopy(u_new)
+        if max_norm(E)/max_norm(u) < tolerance:
+            break
+
+
+
+
 
 if __name__ == "__main__":
     main()
