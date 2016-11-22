@@ -4,10 +4,12 @@ import scipy.sparse
 import scipy.sparse.linalg
 from copy import deepcopy
 import numpy as np
+from tqdm import tqdm
 from math import log
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import gc as garbage
+from time import clock
 
 
 def RHS(X,Y):
@@ -61,32 +63,37 @@ def get_checkerboard_of_size(u):
     t = np.row_stack(t)
     return t
 
+def GSRB_its(inds, u, rhs, N, h):
+    v = deepcopy(u)
+    for (i,j) in inds:
+        if i == 0:
+            first = 0
+        else:
+            first = u[i-1][j]
+        if j == 0:
+            second = 0
+        else:
+            second = u[i][j-1]
+        if i == N:
+            third = 0
+        else:
+            third = u[i+1][j]
+        if j == N:
+            fourth = 0
+        else:
+            fourth = u[i][j+1]
+        v[i][j] = (1/4)*(first + second + third + fourth - (h**2)*rhs[i][j])
+    return v
+
 def GSRB(u,rhs,N,h):
     checkerboard = get_checkerboard_of_size(u)
     red_indicies = np.where(checkerboard == 1)
     blue_indicies = np.where(checkerboard == 0)
     red_indicies = zip(red_indicies[0],red_indicies[1])
     blue_indicies = zip(blue_indicies[0],blue_indicies[1])
-    for indices in [red_indicies, blue_indicies]:
-        for (i,j) in indices:
-            if i == 0:
-                first = 0
-            else:
-                first = u[i-1][j]
-            if j == 0:
-                second = 0
-            else:
-                second = u[i][j-1]
-            if i == N-3:
-                third = 0
-            else:
-                third = u[i+1][j]
-            if j == N-3:
-                fourth = 0
-            else:
-                fourth = u[i][j+1]
-            u[i][j] = (1/4)*(first + second + third + fourth - (h**2)*rhs[i][j])
-    return u
+    v = GSRB_its(red_indicies,u,rhs,N-3,h)
+    z = GSRB_its(blue_indicies,v,rhs,N-3,h)
+    return z
 
 
 def pls_plot(X,Y,Z):
@@ -147,18 +154,23 @@ def V_cycle(power,u,f):
     return v
 
 def main():
-    tolerance = 10**-3
-    power = 2
+    max_its = 100
+    tolerance = 10**-7
+    power = 8
     u = np.zeros((2**power - 1,2**power - 1))
     X,Y,N,h = get_mesh(power)
-    while True:
+    its = 0
+    t = tqdm(xrange(max_its))
+    for i in t:
+        its += 1
         u_old = u + 0
         u = V_cycle(power, u_old, RHS(Y,X))
         E = u-u_old
-        print max_norm(E)/max_norm(u_old)
-        if max_norm(E)/max_norm(u_old) < tolerance:
+        if max_norm(E) < tolerance*max_norm(u_old):
             break
+        t.set_description("||E||=%.10f" % max_norm(E))
 
+    print "iterations = %d" % its
 
 
 
