@@ -119,19 +119,18 @@ def V_cycle(power,u,f):
     X,Y,N,h = get_mesh(power)
 
     # Smooth
-    u = GSRB(u,f,N,h)
-    u = u.transpose()
+    v = GSRB(u,f,N,h)
 
     # Compute Residual
     L = disc_lapl(N-2,h)
-    r = (f.transpose().flatten() - L.dot(u.flatten())).reshape((int(2**power - 1),int(2**power - 1)))
+    r = (f.flatten() - L.dot(v.flatten())).reshape((int(2**power - 1),int(2**power - 1)))
 
     # Restrict
     r = restriction(r)
 
     # Solve
     if power == 2:
-        e = trivial_direct_solve(h,r)
+        e = trivial_direct_solve(2*h,r)
     else:
         e_guess = np.zeros((2**(power-1) - 1, 2**(power-1) - 1))
         e = V_cycle(power-1,e_guess,r)
@@ -140,14 +139,12 @@ def V_cycle(power,u,f):
     e = interpolation(e,power)
 
     # Correct the solution
-    u = u + e
+    v = v + e
 
     # Smooth
-    u = GSRB(u,f,N,h)
-    u = u.transpose()
+    v = GSRB(v,f,N,h)
 
-    return u
-
+    return v
 
 def main():
     tolerance = 10**-3
@@ -155,11 +152,11 @@ def main():
     u = np.zeros((2**power - 1,2**power - 1))
     X,Y,N,h = get_mesh(power)
     while True:
-        u_new = V_cycle(power, u, RHS(X,Y))
-        E = u_new-u
-        print max_norm(E)/max_norm(u)
-        u = deepcopy(u_new)
-        if max_norm(E)/max_norm(u) < tolerance:
+        u_old = u + 0
+        u = V_cycle(power, u_old, RHS(Y,X))
+        E = u-u_old
+        print max_norm(E)/max_norm(u_old)
+        if max_norm(E)/max_norm(u_old) < tolerance:
             break
 
 
