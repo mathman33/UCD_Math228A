@@ -1,0 +1,183 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{November 22, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Conjugate Gradient Method}
+    \begin{itemize}
+        \item Solving $Au = f$ where $A$ is symmetric positive definite.
+        \item $A$ is symmetric if $A = A^T$
+        \item $A$ is positive definite if $y^TAy > 0$ for all $y \neq 0$.
+        \begin{itemize}
+            \item This means all eigenvalues are positive, real, and eigenvectors corresponding to different eigenvalues are orthogonal.
+        \end{itemize}
+        \item We can solve using matrix-vector product.
+        \item Given $u$, compute $Au$.  We don't need $A$, only how to get $Au$.
+        \item CG is an example of a Krylov method
+    \end{itemize}
+    CG is related to minimization.  Suppose $A$ is s.p.d., $N\times N$, and define the functional $\f{\phi}{\Rl^n}{\Rl}$ by
+    \begin{align*}
+        \phi(u) = \frac{1}{2}u^TAu - u^Tf
+    \end{align*}
+    Solution to $Au=f$ is the minimizer of $\phi$.
+    \begin{align*}
+        \grad\phi = \frac{1}{2}Au + \frac{1}{2}A^Tu - f = Au - f
+    \end{align*}
+    since $A = A^T$.  So $\grad\phi = 0 \iff Au = f$.  Is it a minimum or a maximum?
+    \begin{align*}
+        \grad\grad\phi = A
+    \end{align*}
+    Because $A$ is positive definite, we know $\phi$ is convex with positive concavity.  That is, the solution to $Au = f$ is the minimizer of $\phi$.  We can use the method of steepest descents.  Have $u_k$ be the $k$th iterate.  We want a method for generating $u_{k+1}$.
+
+    Remember $\grad\phi(u_k)$ points in the direction of greatest ascent.  But
+    \begin{align*}
+        \grad\phi(u_k) = Au_k - f = -(f - Au_k) = -r_k
+    \end{align*}
+    Thus we should move in the direction of the residual since that is the direction of greatest descent.  So,
+    \begin{align*}
+        u_{k+1} = u_k + \alpha r_k
+    \end{align*}
+    where $\alpha$ is a parameter.  Actually, we want to choose $\alpha$ such that $\phi(u_{k+1}) = \min_\alpha\phi(u_k + \alpha r_k)$.  How do we minimize?
+    \begin{align*}
+        \frac{\dd}{\dd\alpha}\phi(u + \alpha r)
+    \end{align*}
+    and set equal to $0$ to find $\alpha$.
+    \begin{align*}
+        \frac{\dd}{\dd\alpha}\phi(u + \alpha r) &= \frac{\dd}{\dd\alpha}\qty[\frac{1}{2}(u + \alpha r)^TA(u + \alpha r) - (u + \alpha r)^T f] \\
+        &= \frac{\dd}{\dd \alpha}\qty[\qty(\frac{1}{2}u^TAu - u^Tf) + \qty(\underbrace{\frac{1}{2}r^TAu + \frac{1}{2}u^TAr}_\text{equal since $A$ is symmetric} - r^Tf)\alpha + \qty(\frac{1}{2}r^TAr)\alpha^2] \\
+        &= r^TAu - r^Tf + \alpha r^TAr \\
+        &= r^T(Au - f) + \alpha r^TAr \\
+        &= -r^Tr + \alpha r^TAr
+    \end{align*}
+    Setting this equal to $0$ gives
+    \begin{align*}
+        \alpha^* = \frac{r^Tr}{r^TAr}
+    \end{align*}
+    And we see the second derivative with respect to $\alpha$ is positive and thus $\alpha^*$ is a minimum.
+    Thus,
+    \begin{align*}
+        u_{k+1} = u_k + \frac{r_k^Tr_k}{r_k^TAr_k}u_k
+    \end{align*}
+    The steepest descent algorithm:
+    \begin{itemize}
+        \item Initialize $u_0$ (guess)
+        \item Loop through $k$
+        \begin{itemize}
+            \item compute $r_k = f - Au_k$
+            \item check $\norm{r_k}$ for stopping (stop if below a tolerance) {\color{red}Why is this the criterion?} {\color{blue} The residual is available, might as well use it.}
+            \item compute $\alpha = \dfrac{r_k^Tr_k}{r_k^TAr_k}$
+            \item $u_{k+1} = u_k + \alpha r_k$
+        \end{itemize}
+    \end{itemize}
+    How expensive?
+    \begin{itemize}
+        \item 2 matrix-vector products
+    \end{itemize}
+
+    \begin{align}
+        r_{k+1} &= f - Au_{k+1} = f - A(u_k + \alpha r_k) = f - Au_k - \alpha Ar_k = r_k - \alpha Ar_k
+    \end{align}
+    So a more efficient method (implementation) is
+    \begin{itemize}
+        \item Initialize $u_0$ and $r_0 = f - Au_0$
+        \item Loop in $k$
+        \begin{itemize}
+            \item check for stopping $\norm{r_k}$
+            \item compute $w = Ar_k$
+            \item compute $\alpha = \dfrac{r_k^Tr_k}{r^kTw}$
+            \item update $u_{k+1} = u_k + \alpha r_k$
+            \item update the residual $r_{k+1} = r_k - \alpha w$
+        \end{itemize}
+    \end{itemize}
+    How expensive?
+    \begin{itemize}
+        \item 1 matrix-vector product
+    \end{itemize}
+
+    Note that successive residuals are always orthogonal to each other.  The shape of the level curves are related to the eigenvalues.  There are special points on level curves where the residual points directly at the minimum.  If we start at one of these special points, we are done after just one iteration.  If we start at one of these special points, we know the residual $r$ is proportional to the error.  That is,
+    \begin{align}
+        r = \lambda(u - v)
+    \end{align}
+    where $u$ is the minimum and $v$ is the starting guess.  But
+    \begin{align}
+        f - Av &= \lambda(u - v) \\
+        A(u - v) &= \lambda(u - v)
+    \end{align}
+    This tells us that the residual at these points are eigenvectors. \\
+
+    Suppose $\dfrac{\lambda_2}{\lambda_1} \approx 1$.  Then the method converges quickly since the level curves are small perturbations of circles.  Suppose $\dfrac{\lambda_2}{\lambda_1} \gg 1$.  Then the two radii of the level curves are drastically different, producing a long skinny ellipse.  If we start at the vertices, great, we are done in one step.  But if we start really close the major vertex, we will take lots of tiny steps as we approach the minimum, i.e.~very slow convergence.  So the convergence rate depends on the ratio of the largest to smallest eigenvalue.  Define $\kappa$ as
+    \begin{align}
+        \kappa = \norm{A}_2\norm{A^{-1}}_2
+    \end{align}
+    and call it the ``condition number.''  For symmetric matrices $A$,
+    \begin{align}
+        \kappa = \frac{\max_k \abs{\lambda_k}}{\min_k \abs{\lambda_k}}
+    \end{align}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

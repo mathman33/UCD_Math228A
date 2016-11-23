@@ -19,7 +19,7 @@ HELP = {
 }
 
 def RHS(X,Y):
-    return -np.exp(-(X - 0.25)**2 - (Y - 0.6)**2)
+    return np.sin(np.pi*Y)*(10*(np.pi**2)*np.cos(np.pi*X)*np.cos(5*np.pi*X) - 26*np.pi**2*np.sin(np.pi*X)*np.sin(5*np.pi*X)) - (np.pi**2)*np.sin(np.pi*X)*np.sin(5*np.pi*X)*np.sin(np.pi*Y)
 
 def which_norm(s):
     if s == "max":
@@ -46,6 +46,7 @@ def pls_plot(X,Y,Z):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
     ax.plot_surface(X,Y,Z,rstride=1,cstride=1)
+    ax.set_zlim(-1,1)
     plt.show()
     plt.close()
     garbage.collect()
@@ -69,6 +70,8 @@ def main():
     X,Y,N,h = get_mesh(ARGS.power)
     f = RHS(Y,X)
 
+    solution = np.sin(np.pi*Y)*np.sin(np.pi*X)*np.sin(5*np.pi*Y)
+
     t = tqdm(xrange(ARGS.max_iterations))
     for i in t:
         u_old = u + 0
@@ -79,6 +82,9 @@ def main():
         t.set_description("||E||=%.10f" % norm(E))
 
     print "\n\niterations = %d" % i
+
+    pls_plot(X,Y,solution)
+    pls_plot(X,Y,u)
 
 
 
