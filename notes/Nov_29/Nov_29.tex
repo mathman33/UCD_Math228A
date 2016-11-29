@@ -1,0 +1,166 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{November 29, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Conjugate Gradient Method}
+        $Au = f$ where $A$ is symmetric and positive definite (s.p.d.).  It turns out $u$ minimizes $\phi$ where $$\phi(u) = u^TAu - u^Tf.$$  Remember the definition $$\kappa = \norm{A}_2\norm{A^{-1}}_2.$$  For symmetric matrices, $$\kappa = \frac{\displaystyle\max_j\abs{\lambda_j}}{\displaystyle\min_j\abs{\lambda_j}}.$$
+
+        In conjugate gradient method, we will not always go in the direction of steepest descent (the residual direction).  Let $p_k$ be the vector to follow.  $$u_{k+1} = u_k + \alpha p_k.$$  Follow this search direction until $\phi$ increases, i.e.~minimize $\phi$ on a 1D space.  We find $$\alpha = \frac{p_k^Tr_k}{p_k^TAp_k}.$$
+
+        \subsection{Start in 2D}
+            \begin{itemize}
+                \item Initial guess $u_0$
+                \item compute residual $r_0$
+                \item Initialize $p_0 = r_0$
+                \item Get $u_1 = u_0 + \alpha p_0$
+                \item Pick $p_1$ so that $p_1^TAp_0 = 0$.
+                \begin{itemize}
+                    \item In otherwords, $p_0$ and $p_1$ are $A$-conjugate, or $$p_1^TAp_0 = \left\langle p_0, p_1 \right\rangle_A$$ because $A$ is s.p.d.
+                    \item Why do this?  Notice that $p_0$ is tangent to the level set of $\phi$ at $\phi(u_1)$, i.e.~we know $p_0^Tr_1 = 0$.  So,
+                    \begin{align*}
+                        p_0^Tr_1 &= 0 \\
+                        p^T\qty(f - Au_1) &= 0 \\
+                        p^T\qty(Au - Au_1) &= 0 \\
+                        p^TA\qty(u - u_1) &= 0
+                    \end{align*}
+                    So $p_1$ will be pointing in the direction of $u - u_1$.  So $u_2$ is the exact solution.
+                \end{itemize}
+            \end{itemize}
+        \subsection{3D}
+            \begin{itemize}
+                \item initial guess $u_0$
+                \item compute residual $r_0$
+                \item Initialize $p_0 = r_0$
+                \item Get $u_1 = u_0 + \alpha p_0$
+                \item Pick $p_1$ to be $A$-conjugate to $p_0$.
+                \begin{itemize}
+                    \item This is a 2D space to choose from.. just pick a direction in that space.
+                \end{itemize}
+                \item $p_1$ and $r_1$ define $\alpha$
+                \item calculate $u_2 = u_1 + \alpha p_1$.
+                \begin{itemize}
+                    \item $p_0$ and $p_1$ span a plane.  This plane, which is $c_0p_0 + c_1p_1 + u_2$, is tangent to the level surface at $\phi(u_2)$.
+                    \item At this point, we've minimized on this plane.
+                \end{itemize}
+                \item Pick $p_2$ to be $A$-conjuage to $\{p_0,p_1\}$.
+                \item Minimizing $\phi$ along this direction gives us the exact solution.
+                \begin{align*}
+                    \qty(c_0p_0 + c_1p_1)^Tr_2 &= 0 \\
+                    \qty(c_0p_0 + c_1p_1)^T(f - Au_2) &= 0 \\
+                    \qty(c_0p_0 + c_1p_1)^T(Au - Au_2) &= 0 \\
+                    \qty(c_0p_0 + c_1p_1)^TA(u - u_2) &= 0
+                \end{align*}
+                So $p_2$ is pointing right at the solution.
+            \end{itemize}
+        \subsection{In general}
+            So CG will (no round off) give the xact solution in $N$ steps.  Usually we get close in far fewer steps.
+            \subsubsection{Pseudocode}
+            \begin{itemize}
+                \item Initialize $u_0$, $r_0 = f - Au_0$, $p_0 = r_0$
+                \item loop in $k$
+                \begin{itemize}
+                    \item $w = Ap_k$
+                    \item $\alpha = \dfrac{r_k^Tr_k}{w^Tp_k}$
+                    \item $u_{k+1} = u_k + \alpha p_k$
+                    \item $r_{k+1} = r_k - \alpha w$
+                    \item check $\norm{r_{k+1}}$ for stopping
+                    \item compute $\beta = \dfrac{r_{k+1}^Tr_{k+1}}{r_k^Tr_k}$
+                    \item $p_{k+1} = r_{k+1} + \beta p_k$
+                    \begin{itemize}
+                        \item This is $r_{k+1}$ without components in $\{p_0,p_1,\dots,p_{k-1}\}$.
+                    \end{itemize}
+                \end{itemize}
+            \end{itemize}
+    
+    \section{Analysis of Convergence}
+        Because $A$ is s.p.d.~it defines a norm $\norm{u}_A^2 = u^TAu$.  We can show $\norm{e_j}_A \leq 2\qty(\dfrac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1})^j\norm{e_0}_A$, which shows convergence since $\norm{e_j}_A \rightarrow 0$ as $j \rightarrow \infty$.  So, $\kappa \approx 1$ gives fast convergence and $\kappa \gg 1$ gives slow convergence.
+
+        \subsection{Theorem from Book}
+            The vectors in the CG algorithm have the following properties provided $r_k \neq 0$:
+            \begin{enumerate}
+                \item $p_k$ is $A$-conjugate to all previous search directions.
+                \item $r_k$ is orthogonal to all previous residuals.
+                \item The following subspaces of $\Rl^n$ are identical
+                \begin{enumerate}
+                    \item $\text{span}\left\{p_0,p_1,\dots,p_{k-1}\right\}$
+                    \item $\text{span}\left\{r_0,Ar_0,A^2r_0,\dots,A_{k-1}r_0\right\}$
+                    \item $\text{span}\left\{e_0,Ae_0,A^2e_0,\dots,A_{k-1}e_0\right\}$
+                \end{enumerate}
+                Define $K_n = \text{span}\left\{r_0,Ar_0,A^2r_0,\dots,A_{n-1}r_0\right\}$ as the $n$-dimensional Krylov space associated with $r_0$. $$u_n \in u_0 + K_n.$$ $u_n$ minimumzes $\phi$ in this space.  Minimizing $\phi(u)$ is equivalent to minimizing $\norm{e_j}_A^2$.
+                \begin{align*}
+                    \norm{e_j}_A^2 &= e_j^TAe_j \\
+                    &= (u_j - u)^TA(u_j - u) \\
+                    &= u_j^TAu_j - 2u_j^TAu + u^TAu \\
+                    &= u_j^TAu - 2u_j^Tf + u^TAu \\
+                    &= 2\phi(u_j) + C
+                \end{align*}
+            \end{enumerate}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
