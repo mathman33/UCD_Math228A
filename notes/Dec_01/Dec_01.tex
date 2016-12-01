@@ -1,0 +1,205 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228A Notes}
+\author{Sam Fleischer}
+\date{December 1, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Last Time}
+        Minimizing $\phi(u)$ is equivalent to minimizing $\norm{e_k}_A$.
+        \begin{align*}
+            \text{span}\qty{p_0, \dots, p_{k-1}} = \text{span}\qty{Ae_0,A^2e_0,\dots,A^ke_0}
+        \end{align*}
+        We can write $u_k = u_0 + \alpha_0p_0 + \alpha_1p_1 + \dots + \alpha_{k-1}p_{k-1}$, so,
+        \begin{align*}
+            u_k = u_0 + c_1Ae_0 + a_2A^2e_0 + \dots + c_kA^ke_0
+        \end{align*}
+        Then substract the solution $u$ from both sides:
+        \begin{align*}
+            e_k &= e_0 + c_1Ae_0 + c_2A^2e_0 + \dots + c_kA^ke_0 \\
+            &= q(A)e_0
+        \end{align*}
+        where $q(A)$ is a polynomial of the matrix $A$.  This means CG picks $q\in\pi_k$, which is the space of polynomials of degree at most $k$ with $q(0) = 1$.  Doing so minimizes $\norm{e_k}_A = \norm{q(A)e_0}_A$.
+
+    \section{Analysis}
+        Let $A$ be diagonalizable.  Then $A = Q\Lambda Q^{-1}$.  Then $A^j = Q\Lambda^jQ^{-1}$ for any integer $j$.  Then
+        \begin{align*}
+            q(A) = Qq(\Lambda)Q^{-1} = Q\qty(\begin{array}{cccc}
+                q(\lambda_1) & 0 & \dots & 0\\
+                0 & q(\lambda_2) & \dots & \vdots \\
+                \vdots & \vdots & \ddots & 0 \\
+                0 & \dots & 0 & q(\lambda_N)
+            \end{array})Q^{-1}
+        \end{align*}
+        We can show
+        \begin{align*}
+            \norm{e_k}_A^2 = \norm{q(A)e_0}_A^2 \leq \underbrace{\max_j\qty(q(\lambda_j))^2\norm{e_0}_A^2}_\text{our error bound}
+        \end{align*}
+        Our error bound comes from minimizing $\displaystyle\max_j\qty(q(\lambda_j))^2$.  We need to know how the polynomial behaves on the eigenvalues.
+        \subsection{First CG step}
+            So CG picks $q_1(x)$ so that $q_1(\lambda_1) = -q_1(\lambda_N)$, that is,
+            \begin{align*}
+                q_1(x) = 1 - \frac{2x}{\lambda_N + \lambda_1}
+            \end{align*}
+            This is the polynomial of degree $1$ through $(0,1)$ which minimizes the maximum of $q$ on the spectrum (supposing $\lambda_1 < \lambda_2 < \dots < \lambda_N$).
+        \subsection{Second CG step}
+            We can't solve this analytically for arbitrary eigenvalues.  If we assume the eigenvalues are uniformly distributed, however, we should get a quadratic where $q_2(\lambda_1) = q_2(\lambda_N) = -q_2\qty(\dfrac{\lambda_1 + \lambda_N}{2})$.  This does not exactly solve the problem, but it satisfies
+            \begin{align*}
+                \min_{q_i\in\pi_2}\max_{x\in\qty[\lambda_1,\lambda_N]}\abs{q(x)},
+            \end{align*}
+            that is, it minimizes over the interval between the smallest and largest eigenvalue.  Is is an overestimate for clustered eigenvalues.
+        \subsection{$k$th CG step}
+            These are scaled and shifted Chebyshev polynomials.  Use this:
+            \begin{align*}
+                \norm{q_k(A)e_0}_A \leq 2\qty(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1})^k\norm{e_0}_A
+            \end{align*}
+            where $k$ is the iteration and $\kappa$ is the condition number.
+    \section{For Discrete Laplacian, what is $\kappa$?}
+        The smallest eigenvalue is $\order{1}$ and the largest eigenvalue is $\order{\frac{1}{h^2}}$  So $\kappa = \order{\frac{1}{h^2}}$.  Doing asymptotics on the above condition gives, for large $\kappa$, that the number of iterations to converge to a tolerance of $\E$ (relative) is
+        \begin{align*}
+            \sqrt{\kappa}\log(\E)
+        \end{align*}
+        For the Laplacian, this is $\order{\frac{1}{h}}$ iterations to converge to a given tolerance.  But $\order{\frac{1}{h}} = \order{n}$ and each iteration costs $\order{N}$.  So, in 2D ($n^2 = N$), we expect the total work to be $\order{Nn} = \order{N^{\nicefrac{3}{2}}}$.  This is the same scaling as SOR.
+
+    \section{Preconditioning CG}
+        Let's try to cluster the eigenvalues! \\
+
+        $Au = f$.  Big condition numbers mean slow convergence, small condition numbers mean fast convergence.  Let's multiply through by an invertible matrix:
+        \begin{align*}
+            M^{-1}Au = M^{-1}f
+        \end{align*}
+        These two problems have the same solution.  The spectrum of the matrix $M^{-1}A$ is different than the spectrum of $A$.  The hope is that this is better conditioned.  For CG, I need/want $M$ to be
+        \begin{enumerate}
+            \item s.p.d.
+            \item $M^{-1}A$ is better conditioned
+            \item $M^{-1}$ easy to apply, i.e. $Mx=b$ is easy to solve.  We don't need the matrix.  We just need to apply it.
+        \end{enumerate}
+        A good preconditioner $M^{-1}$ approximates $A^{-1}$. \\
+
+        In general, $M^{-1}A$ is not symmetric.
+        \begin{align*}
+            Au &= f \\
+            B^{-1}Au &= B^{-1}f \\
+            B^{-1}AB^{-T}B^Tu &= B^{-1}f
+        \end{align*}
+        Define $\tilde{A} = B^{-1}AB^{-T}$, $\tilde{u} = B^Tu$, $\tilde{f} = B^{-1}f$, so
+        \begin{align*}
+            \tilde{A}\tilde{u} = \tilde{f}
+        \end{align*}
+        We see $\tilde{A}$ is symmetric.  Also,
+        \begin{align*}
+            y^TB^{-1}AB^{-T}y = \qty(B^{-T}y)^TA\qty(B^{-T}y) \geq 0
+        \end{align*}
+        for $y \neq 0$, i.e. $\tilde{A}$ is s.p.d.  Next,
+        \begin{align*}
+            B^{-T}B^{-1}AB^{-T}B^T &= B^{-T}B^{-1}A \\
+            &= \qty(BB^T)^{-1}A \\
+            &= M^{-1}A
+        \end{align*}
+        where $M \coloneqq BB^T$.  So $\tilde{A}$ has the same eigenvalues as $M^{-1}A$ where $M = BB^T$. \\
+
+        So, we write CG in $\tilde{\cdot}$ variables and transform back to original variables.  So,
+        \begin{align}
+            u_k = B^{-T}\tilde{u}_k, \qquad p_k = B^{-T}\tilde{p}_k, \qquad r_k = B\tilde{r}_k
+        \end{align}
+        Then $B$ and $B^{-T}$ drop out of the algorithm because:
+        \begin{align}
+            \tilde{p}_{k+1} &= \tilde{r}_{k+1} + \beta_k\tilde{p}_k \\
+            B^Tp_{k+1} &= B^{-1}r_{k+1} + \beta_kB^Tp_k \\
+            B^{-T}B^Tp_{k+1} &= B^{-T}B^{-1}r_{k+1} + \beta_kB^{-T}B^Tp_k \\
+            p_{k+1} &= M^{-1}r_{k+1} + \beta_k p_k
+        \end{align}
+
+        \subsection{PCG Algorithm}
+            \begin{itemize}
+                \item Initialize residual $r_0 = f - Au_0$
+                \item Solve $Mz_0 = r_0$ or compute $z_0 = M^{-1}r_0$ (either we have $M^{-1}$ or just apply V-cycle or whatever to $z_0 = Mr_0$)
+                \item loop in $k$
+                \begin{itemize}
+                    \item $w_k = Ap_k$
+                    \item $\alpha = \dfrac{z_k^Tr_k}{p_k^Tw_k}$ $\leftarrow$ different from before
+                    \item $u_{k+1} = u_k + \alpha p_k$
+                    \item $r_{k+1} = r_k - \alpha w_k$
+                    \item check $\norm{r_{k+1}}$ for breaking out of the loop
+                    \item compute $z_{k+1} = M^{-1}r_{k+1}$ $\leftarrow$ different from before
+                    \item compute $\beta = \dfrac{k_{k+1}^Tr_{k+1}}{z_k^Tr_k}$ $\leftarrow$ different from before
+                    \item $p_{k+1} = z_{k+1} + \beta p_k$ $\leftarrow$ different from before
+                \end{itemize}
+            \end{itemize}
+        \subsection{How do we pick the preconditioner $M^{-1}$?}
+            \begin{itemize}
+                \item One choice is $M^{-1} = D^{-1}$ whre $D$ is the diagonal matrix of $A$.  For a Poisson equation with constant coefficient, this is ineffective since $D^{-1}$ is a scalar.  This brings variable coefficient problems on par with constant coefficient.
+                \item Use other iteration schemes
+                \begin{itemize}
+                    \item SSOR (Symmetric SOR) Loop through SOR in both directions
+                    \item MG (multigrid) but using a symmetric smoother (like red-black-black-red)
+                \end{itemize}
+                \item Approximate factorizations (incomplete LU or incomplete Cholesky)  This is just doing a little Gauss-Jordan elimination and just stopping midway.  These are nice since they're algebraic, so it's a know-nothing algorithm.
+                \item The sky's the limit.
+            \end{itemize}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
