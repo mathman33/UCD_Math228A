@@ -6,6 +6,10 @@ import gc as garbage
 from tqdm import tqdm
 from get_mesh import get_mesh
 from V_cycle import V_cycle
+from math import log
+import copy
+from operators import get_laplacian
+from smoothers import GS_lex, GSRB
 from mpl_toolkits.mplot3d import Axes3D
 from time import clock
 from argparse import ArgumentParser
@@ -45,8 +49,8 @@ def which_condition(s):
 def pls_plot(X,Y,Z):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
-    ax.plot_surface(X,Y,Z,rstride=1,cstride=1)
-    ax.set_zlim(-1,1)
+    ax.plot_surface(X,Y,Z,rstride=10,cstride=10)
+    # ax.set_zlim(-1,1)
     plt.show()
     plt.close()
     garbage.collect()
@@ -61,29 +65,48 @@ def PARSE_ARGS():
     return parser.parse_args()
 
 def main():
+    # # get the discrete laplacian of size N-2
+    # L = disc_lapl(N-2,h)
+    # # flatten the matrices into vectors and set R = f - Lv
+    # R = f.flatten() - L.dot(v.flatten())
+    # # reshape R into a matrix
+    # r = (R).reshape((int(2**power - 1),int(2**power - 1)))
+
     ARGS = PARSE_ARGS()
     norm = which_norm(ARGS.norm)
     condition = which_condition(ARGS.convergence)
     
-    # Initialize u and get the right hand side of the equation
+    # initialize a guess
     u = np.zeros((2**ARGS.power - 1,2**ARGS.power - 1))
     X,Y,N,h = get_mesh(ARGS.power)
-    f = RHS(Y,X)
+    # f = RHS(X,Y)
 
-    solution = np.sin(np.pi*Y)*np.sin(np.pi*X)*np.sin(5*np.pi*Y)
+    Ls = {}
+    for i in xrange(1,10):
+        Ls[str(i)] = get_laplacian(2**i - 1)
+
+    # Set the algebraic solution
+    ALG_SOL = np.random.rand(2**ARGS.power-1,2**ARGS.power-1)
+    # get the discrete laplacian of size N-2
+    L = get_laplacian(N-2)
+    # flatten the matrices into vectors and set R = f - Lv
+    F = Ls[str(int(log(N-1,2)))].dot(ALG_SOL.flatten())
+    # reshape R into a matrix
+    f = (F).reshape((int(2**ARGS.power - 1),int(2**ARGS.power - 1)))
 
     t = tqdm(xrange(ARGS.max_iterations))
     for i in t:
-        u_old = u + 0
-        u = V_cycle(ARGS.power, u_old, f, (1,1))
+        u_old = copy.deepcopy(u)
+        u = V_cycle(ARGS.power, u_old, f, (1,1), X, Y, N, h,Ls)
         E = u-u_old
-        if condition(norm(E),norm(u_old),ARGS.tolerance):
+        normE = norm(E)
+        #     break
+        if condition(normE,norm(u_old),ARGS.tolerance):
             break
-        t.set_description("||E||=%.10f" % norm(E))
+        t.set_description("||E||=%.10f" % normE)
 
     print "\n\niterations = %d" % i
 
-    pls_plot(X,Y,solution)
     pls_plot(X,Y,u)
 
 

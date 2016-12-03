@@ -4,13 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gc as garbage
 from tabulate import tabulate
-from math import pi
+from math import pi,log
 from tqdm import tqdm
 from get_mesh import get_mesh
 from V_cycle import V_cycle
 from mpl_toolkits.mplot3d import Axes3D
+from operators import get_laplacian,compute_residual
 from time import clock
 from argparse import ArgumentParser
+from scipy.stats.mstats import gmean
+from time import clock
 
 HELP = {
     "-m": "Specify maximum number of iterations",
@@ -47,14 +50,6 @@ def which_condition(s):
             return a < tol
     return condition
 
-def pls_plot(X,Y,Z):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
-    ax.plot_surface(X,Y,Z,rstride=1,cstride=1)
-    plt.show()
-    plt.close()
-    garbage.collect()
-
 def PARSE_ARGS():
     parser = ArgumentParser()
     parser.add_argument("-m", "--max_iterations", type=int, default=100, dest="max_iterations", help=HELP["-m"])
@@ -70,33 +65,42 @@ def main():
     condition = which_condition(ARGS.convergence)
 
     nus = []
-    for i in xrange(5):
+    for i in xrange(1,5):
         for j in xrange(i+1):
             nus.append((j,i-j))
+
+    Ls = {}
+    for i in xrange(1,10):
+        Ls[str(i)] = get_laplacian(2**i - 1)
 
     # Initialize u and get the right hand side of the equation
     u = np.zeros((2**ARGS.power - 1,2**ARGS.power - 1))
     X,Y,N,h = get_mesh(ARGS.power)
-    f = RHS(Y,X)
-    real_solution = solution(Y,X)
+    real_solution = np.random.rand(N-2,N-2)
+    f = Ls[str(int(log(N-1,2)))].dot(real_solution.flatten()).reshape(real_solution.shape)
+    normf = norm(f)
     e_0 = real_solution - u
     denom = norm(e_0)
 
     data = []
     for nu in nus:
+        tic = clock()
         u = np.zeros((2**ARGS.power - 1,2**ARGS.power - 1))
         FRACS = []
-        for i in xrange(ARGS.max_iterations):
+        for i in tqdm(xrange(ARGS.max_iterations),desc="(%d,%d)" % (nu[0],nu[1])):
             u_old = u + 0
-            u = V_cycle(ARGS.power, u_old, f, nu)
+            u = V_cycle(ARGS.power, u_old, f, nu, X, Y, N, h, Ls)
+            res = compute_residual(u,f,Ls)
+            normres = norm(res)
             num = norm(real_solution - u)
-            E = u - u_old
             FRACS.append((num/denom)**(1/(i+1)))
-            if condition(norm(E),norm(u_old),ARGS.tolerance):
+            if condition(normres,normf,ARGS.tolerance):
                 break
+        toc = clock()
 
-        data.append((nu[0],nu[1],FRACS[0],np.average(FRACS[:2]),np.average(FRACS[:3]),np.average(FRACS[:5]),np.average(FRACS),i+1))
-    print tabulate(data, headers=["nu_1", "nu_2", "f_1", "f_2", "f_3", "f_5", "f_max", "its"], tablefmt="latex")
+        data.append((nu[0],nu[1],FRACS[0],FRACS[1],FRACS[2],FRACS[3],FRACS[4],i+1,toc-tic))
+    print "\n\n"
+    print tabulate(data, headers=["nu_1", "nu_2", "E_1", "E_2", "E_3", "E_4", "E_5", "its", "time"], tablefmt="latex")
 
 
 

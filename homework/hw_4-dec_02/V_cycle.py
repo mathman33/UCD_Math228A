@@ -1,56 +1,73 @@
 from __future__ import division
 
 from smoothers import GSRB
-from operators import restriction, interpolation
+from operators import restriction, interpolation, compute_residual
 from get_mesh import get_mesh
 from copy import deepcopy
+from time import clock
 import scipy.sparse
 import scipy.sparse.linalg
 import numpy as np
-
-
-def disc_lapl(N,h):
-    off_diag = 1/(h**2)*np.ones(N**2)
-    diag = -4/(h**2)*np.ones(N**2)
-    A = np.vstack((off_diag,off_diag,diag,off_diag,off_diag))
-    A = scipy.sparse.dia_matrix((A,[-N,-1,0,1,N]),shape=(N**2,N**2))
-    A = scipy.sparse.csr_matrix(A)
-    return A
+import cPickle as pickle
 
 def trivial_direct_solve(h,r):
-    return np.asarray((-(h**2)/4)*r.item((0,0))).reshape((1,1))
+    # h: grid spacing
+    # r: residual input (1x1 matrix)
 
-def V_cycle(power,u,f,nu):
+    # get the only item in the matrix
+    R = r.item((0,0))
+    # solve the equation
+    sol = (-(h**2)/4)*R
+    # return the solution, reshaped into a 1x1 matrix
+    return np.asarray(sol).reshape((1,1))
+
+def V_cycle(power,u,f,nu,X,Y,N,h,Ls):
+    # power: the power of 2
+    # u:     the grid to iterate
+    # f:     the righthand side function to use
+    # nu:    a 2-tuple of pre- and post-smooth numbers
+    # X,Y:   the mesh
+    # N:     number of points in the grid (including 0 and 1)
+    # h:     grid spacing
+
+    # copy the input to a new grid
     v = deepcopy(u)
-    X,Y,N,h = get_mesh(power)
 
-    # Smooth
+    # presmooth nu_1 times
     for i in xrange(nu[0]):
+        # smooth the grid
         v = GSRB(v,f,N,h)
 
-    # Compute Residual
-    L = disc_lapl(N-2,h)
-    r = (f.flatten() - L.dot(v.flatten())).reshape((int(2**power - 1),int(2**power - 1)))
+    # Compute the residual
+    r = compute_residual(v,f,Ls)
 
-    # Restrict
-    r = restriction(r)
+    # restrict the residual
+    r = restriction(r,power)
 
-    # Solve
+    # if this is the smallest possible grid, direct solve
     if power == 2:
+        # get the error analytically
         e = trivial_direct_solve(2*h,r)
+    # otherwise, call the V_cycle code recursively
     else:
+        # create a coarse mesh
+        X_c,Y_c,N_c,h_c = get_mesh(power-1)
+        # initialize a guess for the error
         e_guess = np.zeros((2**(power-1) - 1, 2**(power-1) - 1))
-        e = V_cycle(power-1,e_guess,r, nu)
+        # run the V_cycle code for the residual equation
+        e = V_cycle(power-1, e_guess, r, nu, X_c, Y_c, N_c, h_c, Ls)
 
-    # Interpolate the error
+    # interpolate the error
     e = interpolation(e,power)
 
-    # Correct the solution
+    # correct the solution
     v = v + e
 
-    # Smooth
+    # postsmooth nu_2 times
     for i in xrange(nu[1]):
+        # smooth the grid
         v = GSRB(v,f,N,h)
 
+    # return the smoothed and iterated grid
     return v
 
