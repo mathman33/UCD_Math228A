@@ -1,0 +1,253 @@
+\documentclass{article} % A4 paper and 11pt font size
+\setcounter{secnumdepth}{0}
+
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{moreverb}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{caption}
+\usepackage{nicefrac}
+\usepackage{graphics}
+\usepackage[margin=1in]{geometry}
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\usepackage{array}
+\usepackage{arydshln}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{csquotes}
+\usepackage{placeins}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage[makeroom]{cancel}
+\usepackage{bbold}
+\usepackage{scrextend}
+\usepackage{alltt}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage[normalem]{ulem}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usepackage{pgfplots}
+\usepackage{bigints}
+\allowdisplaybreaks
+\pgfplotsset{compat=1.12}
+
+\theoremstyle{plain}
+\newtheorem*{theorem*}{Theorem}
+\newtheorem{theorem}{Theorem}
+\newtheorem*{lemma*}{Lemma}
+\newtheorem{lemma}{Lemma}
+
+\definecolor{verbgray}{gray}{0.9}
+% \definecolor{dkgreen}{green}{0.9}
+
+\lstdefinestyle{PythonCode}{%
+  language=Python,
+  backgroundcolor=\color{verbgray},
+  keywordstyle=\color{blue},      % keyword style
+  keywordstyle=[2]\color{blue},   % keyword style
+  commentstyle=\color{magenta},   % comment style
+  stringstyle=\color{olive},      % string literal styleframe=single,
+  numberstyle=\color{black},      % string literal styleframe=single,
+  framerule=0pt,
+  numbers=left,
+  stepnumber=1,
+  firstnumber=1,
+  showspaces=false,
+  basicstyle=\ttfamily}
+
+\lstset{style=PythonCode}
+
+\makeatletter
+\newcommand{\BIGG}{\bBigg@{3}}
+\newcommand{\vast}{\bBigg@{4}}
+\newcommand{\Vast}{\bBigg@{5}}
+\makeatother
+
+\newenvironment{definition}[1][Definition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+\newcommand{\dy}{\partial_y}
+\newcommand{\dyy}{\partial_{yy}}
+\newcommand{\dxx}{\partial_{xx}}
+\newcommand{\dxy}{\partial_{xy}}
+\newcommand{\dyyy}{\partial_{yyy}}
+\newcommand{\dxxx}{\partial_{xxx}}
+\newcommand{\dx}{\partial_x}
+\newcommand{\E}{\varepsilon}
+\def\Rl{\mathbb{R}}
+\def\Cx{\mathbb{C}}
+
+\newcommand{\Ei}{\text{Ei}}
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
+\usepackage[english]{babel} % English language/hyphenation
+
+\usepackage{sectsty} % Allows customizing section commands
+\allsectionsfont{\centering \normalfont\scshape} % Make all sections centered, the default font and small caps
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancy} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead[L]{\bf Sam Fleischer}
+\fancyhead[C]{\bf UC Davis \\ Numerical Solutions of Differential Equations (MAT228A)} % No page header - if you want one, create it in the same way as the footers below
+\fancyhead[R]{\bf Fall 2016}
+
+\fancyfoot[L]{\bf } % Empty left footer
+\fancyfoot[C]{\bf \thepage} % Empty center footer
+\fancyfoot[R]{\bf } % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{25pt} % Customize the height of the header
+
+\newcommand{\VEC}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\ran}{\text{\rm ran }}
+\newcommand{\Hilb}{\mathcal{H}}
+\newcommand{\lap}{\Delta}
+
+\newcommand{\littleo}[1]{\text{\scriptsize$\mathcal{O}$}\qty(#1)}
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\newcommand{\problem}[2]{
+\vspace{.375cm}
+\boxed{\begin{minipage}{\textwidth}
+    \section{\bf #1}
+    #2
+\end{minipage}}
+}
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+
+\title{ 
+\normalfont \normalsize 
+\textsc{UC Davis, Numerical Solutions of Differential Equations (MAT 228A), Fall 2016} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{2pt} \\[0.4cm] % Thin top horizontal rule
+\Huge Homework \#5 \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{\huge Sam Fleischer} % Your name
+
+\date{December 9, 2016} % Today's date or a custom date
+
+\begin{document}\thispagestyle{empty}
+
+\maketitle % Print the title
+
+\makeatletter
+\@starttoc{toc}
+\makeatother
+
+\pagebreak
+
+\problem{Problem 1}{Write a program to solve the discrete Poisson equation on the unit square using preconditioned conjugate gradient.  Set up a test problem and compare the number of iterations and efficiency of using (i) no preconditioning, (ii) SSOR preconditioning, (iii) multigrid preconditioning.  Run your tests for different grid sizes.  How does the number of iterations scale with the number of unknowns as the grid is refined?  For multigrid preconditioning, compare the efficiency with that of multigrid as a standalone solver.}
+
+I used all of the same multigrid code from my last homework submission.  However I wrote a Gauss-Seidel Red-Black-Black-Red (GSRBBR) smoother and a symmetric SOR (SSOR) smoother since PCG requires a symmetric preconditioner.  Here is the GSRBBR code:
+\lstinputlisting[language=Python, firstline=65, lastline=87]{smoothers.py}
+where the functions \texttt{get\_checkerboard\_of\_size} and \texttt{GS\_iteration} are given in the last homework assignment.  Here is the SSOR code:
+\lstinputlisting[language=Python, firstline=75, lastline=102]{problem_1.py}
+Finally, here is the PCG code:
+\lstinputlisting[language=Python, firstline=28, lastline=73]{problem_1.py}
+Here are some results.  The following tables show how many iterations it takes to solve $\laplacian u = -\exp[-(x - 0.25)^2 - (y - 0.6)^2]$ with initial guess $u \equiv 0$.
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{||l|l|l||}
+        \hline\hline
+        \textbf{Method} & \textbf{Grid Spacing} & \textbf{Iterations} \\
+        \hline\hline
+        SOR & \begin{tabular}{l}$2^{-6}$\\$2^{-7}$\\$2^{-8}$\\$2^{-9}$\end{tabular}& \begin{tabular}{l}262\\508\\1024\\2048\end{tabular}\\\hline
+        MG-GSRB $(\nu_1,\nu_2) = (1,1)$ & \begin{tabular}{l}$2^{-6}$\\$2^{-7}$\\$2^{-8}$\\$2^{-9}$\end{tabular} & \begin{tabular}{l}9\\9\\9\\9\end{tabular} \\\hline
+        CG & \begin{tabular}{l}$2^{-6}$\\$2^{-7}$\\$2^{-8}$\\$2^{-9}$\end{tabular}& \begin{tabular}{l}49\\109\\172\\349\end{tabular} \\\hline
+        PCG (SSOR) & \begin{tabular}{l}$2^{-6}$\\$2^{-7}$\\$2^{-8}$\\$2^{-9}$\end{tabular} & \begin{tabular}{l}35\\53\\81\\121\end{tabular} \\\hline
+        PCG (MG-GSRBBR) & \begin{tabular}{l}$2^{-6}$\\$2^{-7}$\\$2^{-8}$\\$2^{-9}$\end{tabular} & \begin{tabular}{l}7\\7\\7\\7\end{tabular} \\
+        \hline\hline
+    \end{tabular}
+    \caption*{All iterations were ran with tolerance$=10^{-7}$ and break condition $\norm{r} \leq \text{tol}\cdot\norm{f}$}
+\end{table}
+\FloatBarrier
+We see that the number of SOR iterations approximately doubles for each halving of the grid spacing.  Multigrid is grid-independent.  The number of conjugate gradient iterations approximately doubles for each halving of the grid spacing.  The number of PCG with SSOR iterations approximately increases by 50\% for each halving of the grid spacing.  And PCG with MG-GSRBBR is grid-independent.  Since PCG with MG-GSRBBR is essentially twice the work per iteration as MG-GSRB, I think the best method is simply MG-GSRB.
+
+
+
+
+
+
+
+
+
+
+
+
+
+\problem{Problem 2}{I provided the code to give a matrix and right hand side for a discretized Poisson equation on a domain which is the intersection of the interior of the unit square and exterior of a circle centered at $(0.3,0.4)$ with radius $0.15$.  The boundary conditions are zero on the square and $1$ on the circle.
+
+Use your preconditioned conjugate gradient code to solve this problem.  Explore the performance of no preconditioning and multigrid preconditioning for different grid sizes.  Comment on your results.  Note that the MG code is based on an MG solver for a different domain, and so it cannot be used as a solver for this problem.  Is it an effective preconditioner?
+
+\textbf{SSOR preconditioning}\ \ Symmetric SOR (SSOR) consists of one forward sweep of SOR followed by one backward sweep of SOR.  For the discrete Poisson equation, one step of SSOR is
+\begin{align*}
+    u_{i,j}^{k+\nicefrac{1}{2}} &= \frac{\omega}{4}\qty(u_{i-1,j}^{k+\nicefrac{1}{2}} + u_{i,j-1}^{k+\nicefrac{1}{2}} + u_{i+1,j}^k + u_{i,j+1}^k - h^2f_{i,j}) + (1 - \omega)u_{i,j}^k \\
+    u_{i,j}^{k+1} &= \frac{\omega}{4}\qty(u_{i-1,j}^{k+\nicefrac{1}{2}} + u_{i,j-1}^{k+\nicefrac{1}{2}} + u_{i+1,j}^{k+1} + u_{i,j+1}^{k+1} - h^2f_{i,j}) + (1 - \omega)u_{i,j}^{k+\nicefrac{1}{2}}
+\end{align*}
+It can be shown that one step of SSOR in matrix form is equivalent to $$\frac{1}{\omega(2 - \omega)}(D - \omega L)D^{-1}(D - \omega U)(u^{k+1} - u^k) = f,$$ where $A = D - L - U$.  For the constant coefficient problem, this suggests the preconditioner $$M = (D - \omega L)(D - \omega U).$$
+
+\textbf{Multigrid preconditioning}\ \ To use MG as a preconditioner, the product $M^{-1}r$ is computed by applying one V-cycle with zero initial guess with right hand side $r$.  If the smoother is symmetric and the number of pre and post smoothing steps are the same, this preconditioner is symmetric and definite and may be used with CG.  Note that GSRB is not symmeric.}
+
+I wrote the given MATLAB code in Python since the rest of my code is in Pyton.  Here is the result.
+\lstinputlisting[language=Python, firstline=9, lastline=57]{make_matrix_rhs_circleproblem.py}
+where \texttt{sub2ind} is Python's \texttt{numpy.ravel\_multi\_index} and \texttt{get\_laplacian} is given in the previous homework assignment.  Here are some results.  The following tables show how many iterations it takes to solve $\laplacian u = 0$ on $\Omega$ where
+\begin{align*}
+     \Omega = \left\{(x,y) \in [0,1]\times[0,1] \text{ such that } (x - 0.3)^2 + (y - 0.4)^2 \geq 0.15^2\right\},
+\end{align*}
+i.e.~all points in the unit square, but outside the circle of radius $0.15$ at center $(0.3,0.4)$.  The boundary condition is
+\begin{align*}
+    u(x,y) = \begin{cases}
+      0 & \text{if } x = 0 \text{ or } x = 1 \text{ or } y = 0 \text{ or } y = 1 \\
+      1 & \text{if } (x - 0.3)^2 + (y - 0.4)^2 = 0.15^2
+    \end{cases},
+\end{align*}
+i.e.~ all points on the unit square are equal to $0$ and all points on the circle are equal to $1$.
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{||l|l|l||}
+        \hline\hline
+        \textbf{Method} & \textbf{Grid Spacing} & \textbf{Iterations} \\
+        \hline\hline
+        CG & \begin{tabular}{l}$2^{-6}$\\$2^{-7}$\\$2^{-8}$\\$2^{-9}$\end{tabular}& \begin{tabular}{l}181\\471\\1241\\3533\end{tabular} \\\hline
+        PCG (SSOR) & \begin{tabular}{l}$2^{-6}$\\$2^{-7}$\\$2^{-8}$\\$2^{-9}$\end{tabular} & \begin{tabular}{l}45\\75\\126\\232\end{tabular} \\\hline
+        PCG (MG-GSRBBR) & \begin{tabular}{l}$2^{-6}$\\$2^{-7}$\\$2^{-8}$\\$2^{-9}$\end{tabular} & \begin{tabular}{l}31\\48\\74\\120\end{tabular} \\
+        \hline\hline
+    \end{tabular}
+    \caption*{All iterations were ran with tolerance$=10^{-7}$ and break condition $\norm{r} \leq \text{tol}\cdot\norm{f}$}
+\end{table}
+\FloatBarrier
+For the un-preconditioned conjugate gradient method, we see iteration increases from $2.6$ to $2.8$ fold for each halving of the grid spacing.  For the  SSOR-conditioned conjugate gradient method, we see iteration increases from $1.6$ to $1.8$ fold for each halving of the grid spacing.  For the multigrid-preconditioned conjugate gradient method, we see increases from $1.5$ to $1.6$ for each halving of the grid spacing.  Clearly PCG with MG-GSRBBR is no longer grid independent.  I think this means it is no longer worth the work per iteration if PCG with SSOR does slightly worse but is much less expensive per iteration.  This means the best option for this problem is PCG with SSOR.
+
+
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
